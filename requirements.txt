@@ -1,0 +1,2 @@
+# Add project dependencies here, for example:
+# Django>=4.2
