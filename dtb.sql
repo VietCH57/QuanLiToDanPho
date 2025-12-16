@@ -33,8 +33,8 @@ CREATE TABLE CITIZEN (
     Religion VARCHAR(50),
     Nationality VARCHAR(50) DEFAULT 'Vietnam',
     Marital_Status VARCHAR(50), -- 'Single', 'Married', 'Divorced'
-    Occupation VARCHAR(100), -- Added property
-    Education_Level VARCHAR(50), -- Added property
+    Occupation VARCHAR(100), 
+    Education_Level VARCHAR(50), 
     Permanent_Address VARCHAR(200) NOT NULL,
     Current_Residence VARCHAR(200) NOT NULL,
     Residence_Status VARCHAR(50) DEFAULT 'Permanent' CHECK (Residence_Status IN ('Permanent', 'Temporary_Resident', 'Temporary_Absent')), -- General status
@@ -77,7 +77,7 @@ CREATE TABLE TEMPORARY_ABSENCE (
     Temp_Absence_ID VARCHAR(50) PRIMARY KEY,
     CCCD_ID VARCHAR(20) NOT NULL REFERENCES CITIZEN(CCCD_ID),
     Reason VARCHAR(200) NOT NULL,
-    Destination VARCHAR(200), -- Added property
+    Destination VARCHAR(200), 
     Start_Date DATE NOT NULL,
     End_Date DATE,
     Registration_Unit_ID VARCHAR(10) REFERENCES ADMINISTRATIVE_UNIT(Unit_ID) 
@@ -95,7 +95,7 @@ CREATE TABLE CITIZENSHIP_HISTORY (
     Performing_Unit_ID VARCHAR(10) REFERENCES ADMINISTRATIVE_UNIT(Unit_ID) 
 );
 
--- 8. Table AWARD (Replaced PHAN_THUONG)
+-- 8. Table AWARD 
 CREATE TABLE AWARD (
     Award_ID VARCHAR(50) PRIMARY KEY,
     Award_Name VARCHAR(100) NOT NULL,
@@ -104,7 +104,7 @@ CREATE TABLE AWARD (
     Form VARCHAR(50) -- 'Medal', 'Certificate_of_Merit', 'Commendation_Letter'
 );
 
--- 9. Table COMMENDATION_PROPOSAL (Replaced DE_NGHI_KHEN_THUONG)
+-- 9. Table COMMENDATION_PROPOSAL
 CREATE TABLE COMMENDATION_PROPOSAL (
     Proposal_ID VARCHAR(50) PRIMARY KEY,
     CCCD_ID VARCHAR(20) NOT NULL REFERENCES CITIZEN(CCCD_ID),
