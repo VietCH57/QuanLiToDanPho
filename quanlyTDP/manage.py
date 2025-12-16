@@ -1,6 +1,3 @@
-# manage.py — placeholder file.
-# Do NOT add runnable code here yet.
-# Initialize project later with `django-admin startproject`.
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
 import os
@@ -9,7 +6,7 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'quanlito_danpho.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'quanlyTDP.settings')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
