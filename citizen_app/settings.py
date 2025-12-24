@@ -110,7 +110,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'quanlito_danpho.urls'
+ROOT_URLCONF = 'citizen_app.urls'
 
 
 # Templates
@@ -130,4 +130,4 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'quanlito_danpho.wsgi.application'
+WSGI_APPLICATION = 'citizen_app.wsgi.application'
