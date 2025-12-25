@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Thêm phát thưởng{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard' %}">Trang chủ</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="{% url 'khenthuong_list' %}">Khen thưởng</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>Thêm phát thưởng</span>
+    </div>
+    <h2>Thêm phát thưởng mới</h2>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Người nhận</label>
+                <select class="form-control" name="thanh_vien" required>
+                    <option value="">-- Chọn người nhận --</option>
+                    {% for nk in nhankhau_list %}
+                    <option value="{{ nk.pk }}">{{ nk.ho_ten }} ({{ nk.ho_gia_dinh.ma_ho }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Phần thưởng</label>
+                <select class="form-control" name="phan_thuong" required>
+                    <option value="">-- Chọn phần thưởng --</option>
+                    {% for pt in phanthuong_list %}
+                    <option value="{{ pt.pk }}">{{ pt.ten_phan_thuong }} ({{ pt.gia_tri|floatformat:0 }} VNĐ)</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Đợt phát</label>
+                <input type="text" class="form-control" name="dot_phat" required placeholder="VD: Trung Thu 2025, Tết 2026...">
+            </div>
+            <div class="form-group">
+                <label>Ghi chú</label>
+                <textarea class="form-control" name="ghi_chu" rows="3" placeholder="Ghi chú thêm (nếu có)"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a href="{% url 'khenthuong_list' %}" class="btn btn-secondary">Hủy</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

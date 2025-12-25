@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Quản lý Hộ khẩu{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard' %}">Trang chủ</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>Hộ khẩu</span>
+    </div>
+    <h2>Quản lý Hộ khẩu</h2>
+    <p>Danh sách và quản lý thông tin hộ khẩu trong tổ dân phố</p>
+</div>
+<div class="card">
+    <div class="card-header light">
+        <h3><i class="fas fa-house-user"></i> Danh sách hộ khẩu</h3>
+        {% if can_edit %}
+        <a href="{% url 'hokhau_form' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Thêm mới</a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Mã hộ</th>
+                    <th>Chủ hộ</th>
+                    <th>Địa chỉ</th>
+                    <th>Số thành viên</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for hokhau in hokhau_list %}
+                <tr>
+                    <td>{{ hokhau.ma_ho }}</td>
+                    <td>{{ hokhau.chu_ho.ho_ten|default:"Chưa có" }}</td>
+                    <td>{{ hokhau.dia_chi }}</td>
+                    <td>{{ hokhau.thanh_vien_trong_ho.count }}</td>
+                    <td>
+                        <a href="{% url 'hokhau_detail' hokhau.pk %}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
+                        {% if can_edit %}
+                        <a href="{% url 'hokhau_edit' hokhau.pk %}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">Chưa có dữ liệu hộ khẩu</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

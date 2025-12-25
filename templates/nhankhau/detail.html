@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Chi tiết Nhân khẩu - {{ nhankhau.ho_ten }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard' %}">Trang chủ</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="{% url 'nhankhau_list' %}">Nhân khẩu</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>Chi tiết</span>
+    </div>
+    <h2>Chi tiết Nhân khẩu</h2>
+</div>
+
+<!-- Thông tin cá nhân -->
+<div class="card" style="margin-bottom: 25px;">
+    <div class="card-header">
+        <h3><i class="fas fa-user"></i> Thông tin cá nhân</h3>
+        {% if can_edit %}
+        <a href="{% url 'nhankhau_edit' nhankhau.pk %}" class="btn btn-warning btn-sm">
+            <i class="fas fa-edit"></i> Chỉnh sửa
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <div style="display: flex; gap: 30px; align-items: flex-start;">
+            <div style="width: 120px; height: 150px; background: #f0f0f0; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="fas fa-user" style="font-size: 48px; color: #ccc;"></i>
+            </div>
+            <div style="flex: 1;">
+                <h3 style="margin: 0 0 10px 0; color: #333;">{{ nhankhau.ho_ten }}</h3>
+                {% if nhankhau.la_chu_ho %}
+                <span class="badge badge-primary" style="margin-bottom: 15px;">Chủ hộ</span>
+                {% endif %}
+                
+                <table class="table" style="margin-top: 15px;">
+                    <tr>
+                        <th style="width: 180px;">CCCD</th>
+                        <td>{{ nhankhau.cccd|default:"Chưa cập nhật" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Ngày sinh</th>
+                        <td>{{ nhankhau.ngay_sinh|date:"d/m/Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Giới tính</th>
+                        <td>{{ nhankhau.get_gioi_tinh_display|default:nhankhau.gioi_tinh }}</td>
+                    </tr>
+                    <tr>
+                        <th>Trạng thái cư trú</th>
+                        <td>
+                            {% if nhankhau.trang_thai == 'ThuongTru' %}
+                            <span class="badge badge-success">Thường trú</span>
+                            {% elif nhankhau.trang_thai == 'TamTru' %}
+                            <span class="badge badge-warning">Tạm trú</span>
+                            {% else %}
+                            <span class="badge badge-secondary">{{ nhankhau.get_trang_thai_display|default:nhankhau.trang_thai }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Thông tin hộ khẩu -->
+<div class="card">
+    <div class="card-header light">
+        <h3><i class="fas fa-home"></i> Thông tin Hộ khẩu</h3>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <tr>
+                <th style="width: 180px;">Mã hộ</th>
+                <td>
+                    <a href="{% url 'hokhau_detail' nhankhau.ho_gia_dinh.pk %}">
+                        {{ nhankhau.ho_gia_dinh.ma_ho }}
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <th>Địa chỉ</th>
+                <td>{{ nhankhau.ho_gia_dinh.dia_chi }}</td>
+            </tr>
+            <tr>
+                <th>Quan hệ với chủ hộ</th>
+                <td>{{ nhankhau.quan_he_chu_ho|default:"--" }}</td>
+            </tr>
+            <tr>
+                <th>Chủ hộ</th>
+                <td>{{ nhankhau.ho_gia_dinh.chu_ho.ho_ten|default:"Chưa xác định" }}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div style="margin-top: 20px;">
+    <a href="{% url 'nhankhau_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Quay lại danh sách
+    </a>
+</div>
+{% endblock %}

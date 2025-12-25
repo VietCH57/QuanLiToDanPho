@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Đăng ký Tạm trú / Tạm vắng{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard' %}">Trang chủ</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="{% url 'tamtru_list' %}">Tạm trú - Tạm vắng</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>Đăng ký</span>
+    </div>
+    <h2>Đăng ký Tạm trú / Tạm vắng</h2>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Người đăng ký</label>
+                <select class="form-control" name="thanh_vien" required>
+                    <option value="">-- Chọn nhân khẩu --</option>
+                    {% for nk in nhankhau_list %}
+                    <option value="{{ nk.pk }}">{{ nk.ho_ten }} - {{ nk.cccd|default:"Chưa có CCCD" }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Loại đăng ký</label>
+                <select class="form-control" name="loai" id="loai_dang_ky" onchange="toggleFields()">
+                    <option value="tam_tru">Tạm trú</option>
+                    <option value="tam_vang">Tạm vắng</option>
+                </select>
+            </div>
+            
+            <!-- Fields for Tạm trú -->
+            <div id="tam_tru_fields">
+                <div class="form-group">
+                    <label>Địa chỉ thường trú gốc</label>
+                    <input type="text" class="form-control" name="dia_chi_goc" placeholder="Địa chỉ thường trú gốc">
+                </div>
+                <div class="form-group">
+                    <label>Địa chỉ tạm trú</label>
+                    <input type="text" class="form-control" name="dia_chi_tam_tru" placeholder="Địa chỉ tạm trú mới">
+                </div>
+            </div>
+            
+            <!-- Fields for Tạm vắng -->
+            <div id="tam_vang_fields" style="display: none;">
+                <div class="form-group">
+                    <label>Nơi chuyển đến</label>
+                    <input type="text" class="form-control" name="noi_den" placeholder="Nơi sẽ chuyển đến">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Lý do</label>
+                <textarea class="form-control" name="ly_do" rows="3" placeholder="Lý do tạm trú/tạm vắng"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Từ ngày</label>
+                <input type="date" class="form-control" name="ngay_bat_dau" required>
+            </div>
+            <div class="form-group">
+                <label>Đến ngày (dự kiến)</label>
+                <input type="date" class="form-control" name="ngay_ket_thuc">
+            </div>
+            <button type="submit" class="btn btn-primary">Đăng ký</button>
+            <a href="{% url 'tamtru_list' %}" class="btn btn-secondary">Hủy</a>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleFields() {
+    var loai = document.getElementById('loai_dang_ky').value;
+    document.getElementById('tam_tru_fields').style.display = loai === 'tam_tru' ? 'block' : 'none';
+    document.getElementById('tam_vang_fields').style.display = loai === 'tam_vang' ? 'block' : 'none';
+}
+</script>
+{% endblock %}
