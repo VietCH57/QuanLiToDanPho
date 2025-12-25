@@ -2,8 +2,9 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
     HoGiaDinh, ThanhVien, DanhMucPhanThuong, 
-    LichSuPhatThuong, TamTru, TamVang, UserProfile
+    LichSuPhatThuong, TamTru, TamVang
 )
+from apps.users.models import UserProfile
 
 # ==========================================================
 #  NHÓM 1: HỘ GIA ĐÌNH & THÀNH VIÊN

@@ -161,31 +161,11 @@ class LichSuPhatThuong(models.Model):
 
 
 # ==========================================================
-#  PHẦN 7: QUẢN LÝ USER PROFILE (PHÂN QUYỀN & BẢO MẬT)
-#  (Nghiệp vụ: Quản trị hệ thống)
+#  PHẦN 7: QUẢN LÝ USER PROFILE - ĐÃ CHUYỂN SANG apps.users.models
+#  (Sử dụng UserProfile từ apps.users.models thay vì định nghĩa lại ở đây)
 # ==========================================================
-
-class UserProfile(models.Model):
-    """
-    Mở rộng bảng User mặc định của Django.
-    Mục đích: Lưu thêm 'Vai trò' (Role) để phân quyền chi tiết.
-    """
-    ROLE_CHOICES = (
-        ('TO_TRUONG', 'Tổ trưởng'),
-        ('TO_PHO', 'Tổ phó'),
-        ('CAN_BO_NHAN_KHAU', 'Cán bộ nhân khẩu'),
-        ('CAN_BO_HANH_CHINH', 'Cán bộ hành chính'),
-        ('NGUOI_DAN', 'Người dân'),
-    )
-    # OneToOne với User: Mỗi tài khoản chỉ có 1 Profile
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
-    role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='NGUOI_DAN', verbose_name="Vai trò")
-    
-    # Cho phép liên kết tài khoản này với một hộ gia đình cụ thể (dành cho Tổ trưởng/Người dân)
-    ho_gia_dinh = models.ForeignKey(HoGiaDinh, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Thuộc hộ")
-
-    def __str__(self):
-        return f"{self.user.username} - {self.get_role_display()}"
+# UserProfile đã được định nghĩa trong apps/users/models.py
+# Import nó khi cần: from apps.users.models import UserProfile
 
 
 # ==========================================================

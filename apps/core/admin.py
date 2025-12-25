@@ -9,9 +9,9 @@ from .models import (
     DanhMucPhanThuong,
     LichSuPhatThuong,
     TamTru,
-    TamVang,
-    UserProfile
+    TamVang
 )
+from apps.users.models import UserProfile
 
 # ==========================================================
 #  PHẦN 1: CẤU HÌNH HIỂN THỊ PHỤ (INLINES)
