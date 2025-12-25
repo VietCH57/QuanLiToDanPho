@@ -11,6 +11,11 @@ venv/
 .env/
 env/
 
+# Environment variables (BẢO MẬT - QUAN TRỌNG!)
+.env
+*.env
+!.env.example
+
 # Django core
 db.sqlite3
 db.sqlite3-journal

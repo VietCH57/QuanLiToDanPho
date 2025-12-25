@@ -1,0 +1,4 @@
+- Tải mysql từ https://dev.mysql.com/downloads/installer/
+- Chọn custom, rồi chỉ tải server và workbench
+- Tải xong thì copy đường dẫn đến thư mục bin của mysql server, ví dụ C:\Program Files\MySQL\MySQL Server 8.0\bin rồi add vào PATH mới
+- chạy script setup_mysql_auto 

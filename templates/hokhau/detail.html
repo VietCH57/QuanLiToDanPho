@@ -18,9 +18,11 @@
 <div class="card" style="margin-bottom: 25px;">
     <div class="card-header">
         <h3><i class="fas fa-home"></i> Thông tin Hộ khẩu: {{ hokhau.ma_ho }}</h3>
+        {% if can_edit %}
         <a href="{% url 'hokhau_edit' hokhau.pk %}" class="btn btn-warning btn-sm">
             <i class="fas fa-edit"></i> Chỉnh sửa
         </a>
+        {% endif %}
     </div>
     <div class="card-body">
         <table class="table">
@@ -48,9 +50,11 @@
 <div class="card">
     <div class="card-header light">
         <h3><i class="fas fa-users"></i> Danh sách thành viên trong hộ</h3>
+        {% if can_edit %}
         <a href="{% url 'nhankhau_form' %}" class="btn btn-primary btn-sm">
             <i class="fas fa-plus"></i> Thêm thành viên
         </a>
+        {% endif %}
     </div>
     <div class="card-body">
         <table class="table">
@@ -79,7 +83,9 @@
                     <td>{{ tv.quan_he_chu_ho|default:"--" }}</td>
                     <td>
                         <a href="{% url 'nhankhau_detail' tv.pk %}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
+                        {% if can_edit %}
                         <a href="{% url 'nhankhau_edit' tv.pk %}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}
