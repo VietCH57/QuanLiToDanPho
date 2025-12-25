@@ -3,14 +3,17 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.log
 
 # Virtual environments
 venv/
 .env/
+env/
 
-# Django
+# Django core
 db.sqlite3
 /staticfiles/
+media/
 
 # IDEs
 .vscode/
