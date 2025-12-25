@@ -5,6 +5,13 @@ from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from apps.core.models import HoGiaDinh, ThanhVien, TamTru, TamVang, DanhMucPhanThuong, LichSuPhatThuong
 
+# Import decorators phân quyền
+from .decorators import (
+    role_required, admin_required, manager_required,
+    citizenship_manager_required, commendation_manager_required,
+    is_manager, is_citizenship_manager, is_commendation_manager
+)
+
 
 def login_view(request):
     """
@@ -52,12 +59,34 @@ def dashboard_view(request):
     user_profile = request.user.profile
     role = user_profile.role
     
+    # Thống kê chung
+    stats = {
+        'total_hokhau': HoGiaDinh.objects.count(),
+        'total_nhankhau': ThanhVien.objects.count(),
+        'total_tamtru': TamTru.objects.filter(trang_thai='ChoDuyet').count() if hasattr(TamTru, 'trang_thai') else TamTru.objects.count(),
+        'total_khenthuong': LichSuPhatThuong.objects.count(),
+    }
+    
+    # Xác định quyền hạn để hiển thị trong template
+    permissions = {
+        'can_manage_citizens': role in ['admin', 'citizenship_manager'],
+        'can_manage_commendations': role in ['admin', 'commendation_manager'],
+        'is_admin': role == 'admin',
+        'is_manager': role in ['admin', 'citizenship_manager', 'commendation_manager'],
+    }
+    
     # Nội dung theo role
-    if role in ['admin', 'citizenship_manager', 'commendation_manager']:
-        message = "hú, bạn là tinh hoa, oách vl"
+    if role == 'admin':
+        message = "Quản trị viên - Toàn quyền quản lý hệ thống"
+        role_class = "admin"
+    elif role == 'citizenship_manager':
+        message = "Quản lý công dân - Quản lý hộ khẩu, nhân khẩu, tạm trú"
+        role_class = "manager"
+    elif role == 'commendation_manager':
+        message = "Quản lý khen thưởng - Quản lý phần thưởng và phát thưởng"
         role_class = "manager"
     else:  # citizen
-        message = "con gà máu bùn"
+        message = "Người dân - Xem thông tin cá nhân"
         role_class = "citizen"
     
     context = {
@@ -65,6 +94,8 @@ def dashboard_view(request):
         'role_display': user_profile.get_role_display(),
         'message': message,
         'role_class': role_class,
+        'stats': stats,
+        'permissions': permissions,
     }
     
     return render(request, 'users/dashboard.html', context)
@@ -104,25 +135,32 @@ def change_password_view(request):
 # ===== HỘ KHẨU VIEWS =====
 @login_required
 def hokhau_list_view(request):
-    """Danh sách hộ khẩu"""
+    """Danh sách hộ khẩu - Tất cả đều được xem"""
     hokhau_list = HoGiaDinh.objects.all().order_by('ma_ho')
-    return render(request, 'hokhau/list.html', {'hokhau_list': hokhau_list})
-
-
-@login_required
-def hokhau_detail_view(request, pk):
-    """Chi tiết hộ khẩu"""
-    hokhau = get_object_or_404(HoGiaDinh, pk=pk)
-    thanh_vien_list = hokhau.thanh_vien_trong_ho.all()
-    return render(request, 'hokhau/detail.html', {
-        'hokhau': hokhau,
-        'thanh_vien_list': thanh_vien_list
+    can_edit = is_citizenship_manager(request.user)
+    return render(request, 'hokhau/list.html', {
+        'hokhau_list': hokhau_list,
+        'can_edit': can_edit
     })
 
 
 @login_required
+def hokhau_detail_view(request, pk):
+    """Chi tiết hộ khẩu - Tất cả đều được xem"""
+    hokhau = get_object_or_404(HoGiaDinh, pk=pk)
+    thanh_vien_list = hokhau.thanh_vien_trong_ho.all()
+    can_edit = is_citizenship_manager(request.user)
+    return render(request, 'hokhau/detail.html', {
+        'hokhau': hokhau,
+        'thanh_vien_list': thanh_vien_list,
+        'can_edit': can_edit
+    })
+
+
+@login_required
+@citizenship_manager_required
 def hokhau_form_view(request, pk=None):
-    """Thêm/Sửa hộ khẩu"""
+    """Thêm/Sửa hộ khẩu - Chỉ Quản lý công dân"""
     hokhau = get_object_or_404(HoGiaDinh, pk=pk) if pk else None
     
     if request.method == 'POST':
@@ -145,21 +183,30 @@ def hokhau_form_view(request, pk=None):
 # ===== NHÂN KHẨU VIEWS =====
 @login_required
 def nhankhau_list_view(request):
-    """Danh sách nhân khẩu"""
+    """Danh sách nhân khẩu - Tất cả đều được xem"""
     nhankhau_list = ThanhVien.objects.select_related('ho_gia_dinh').all().order_by('ho_ten')
-    return render(request, 'nhankhau/list.html', {'nhankhau_list': nhankhau_list})
+    can_edit = is_citizenship_manager(request.user)
+    return render(request, 'nhankhau/list.html', {
+        'nhankhau_list': nhankhau_list,
+        'can_edit': can_edit
+    })
 
 
 @login_required
 def nhankhau_detail_view(request, pk):
-    """Chi tiết nhân khẩu"""
+    """Chi tiết nhân khẩu - Tất cả đều được xem"""
     nhankhau = get_object_or_404(ThanhVien, pk=pk)
-    return render(request, 'nhankhau/detail.html', {'nhankhau': nhankhau})
+    can_edit = is_citizenship_manager(request.user)
+    return render(request, 'nhankhau/detail.html', {
+        'nhankhau': nhankhau,
+        'can_edit': can_edit
+    })
 
 
 @login_required
+@citizenship_manager_required
 def nhankhau_form_view(request, pk=None):
-    """Thêm/Sửa nhân khẩu"""
+    """Thêm/Sửa nhân khẩu - Chỉ Quản lý công dân"""
     nhankhau = get_object_or_404(ThanhVien, pk=pk) if pk else None
     hokhau_list = HoGiaDinh.objects.all()
     
@@ -206,18 +253,21 @@ def nhankhau_form_view(request, pk=None):
 # ===== TẠM TRÚ - TẠM VẮNG VIEWS =====
 @login_required
 def tamtru_list_view(request):
-    """Danh sách tạm trú - tạm vắng"""
+    """Danh sách tạm trú - tạm vắng - Tất cả đều được xem"""
     tamtru_list = TamTru.objects.select_related('thanh_vien').all().order_by('-ngay_bat_dau')
     tamvang_list = TamVang.objects.select_related('thanh_vien').all().order_by('-ngay_bat_dau')
+    can_edit = is_citizenship_manager(request.user)
     return render(request, 'tamtru/list.html', {
         'tamtru_list': tamtru_list,
-        'tamvang_list': tamvang_list
+        'tamvang_list': tamvang_list,
+        'can_edit': can_edit
     })
 
 
 @login_required
+@citizenship_manager_required
 def tamtru_form_view(request, pk=None):
-    """Thêm đăng ký tạm trú/tạm vắng"""
+    """Thêm đăng ký tạm trú/tạm vắng - Chỉ Quản lý công dân"""
     nhankhau_list = ThanhVien.objects.all()
     
     if request.method == 'POST':
@@ -262,18 +312,21 @@ def tamtru_form_view(request, pk=None):
 # ===== KHEN THƯỞNG VIEWS =====
 @login_required
 def khenthuong_list_view(request):
-    """Danh sách khen thưởng"""
+    """Danh sách khen thưởng - Tất cả đều được xem"""
     lichsu_list = LichSuPhatThuong.objects.select_related('thanh_vien', 'phan_thuong').all().order_by('-ngay_cap_phat')
     phanthuong_list = DanhMucPhanThuong.objects.all()
+    can_edit = is_commendation_manager(request.user)
     return render(request, 'khenthuong/list.html', {
         'lichsu_list': lichsu_list,
-        'phanthuong_list': phanthuong_list
+        'phanthuong_list': phanthuong_list,
+        'can_edit': can_edit
     })
 
 
 @login_required
+@commendation_manager_required
 def khenthuong_form_view(request, pk=None):
-    """Thêm phát thưởng"""
+    """Thêm phát thưởng - Chỉ Quản lý khen thưởng"""
     nhankhau_list = ThanhVien.objects.all()
     phanthuong_list = DanhMucPhanThuong.objects.all()
     
@@ -303,3 +356,102 @@ def khenthuong_form_view(request, pk=None):
         'nhankhau_list': nhankhau_list,
         'phanthuong_list': phanthuong_list
     })
+
+
+# ===== QUẢN LÝ NGƯỜI DÙNG (CHỈ ADMIN) =====
+from django.contrib.auth.models import User
+from apps.users.models import UserProfile
+
+
+@login_required
+@admin_required
+def user_list_view(request):
+    """Danh sách người dùng - Chỉ Admin"""
+    users = User.objects.select_related('profile').all().order_by('-date_joined')
+    return render(request, 'users/user_list.html', {'users': users})
+
+
+@login_required
+@admin_required
+def user_form_view(request, pk=None):
+    """Thêm/Sửa người dùng - Chỉ Admin"""
+    edit_user = get_object_or_404(User, pk=pk) if pk else None
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email', '')
+        first_name = request.POST.get('first_name', '')
+        last_name = request.POST.get('last_name', '')
+        role = request.POST.get('role', 'citizen')
+        password = request.POST.get('password', '')
+        is_active = request.POST.get('is_active') == 'on'
+        
+        try:
+            if edit_user:
+                # Cập nhật user
+                edit_user.email = email
+                edit_user.first_name = first_name
+                edit_user.last_name = last_name
+                edit_user.is_active = is_active
+                if password:
+                    edit_user.set_password(password)
+                edit_user.save()
+                
+                # Cập nhật profile
+                if hasattr(edit_user, 'profile'):
+                    edit_user.profile.role = role
+                    edit_user.profile.full_name = f"{first_name} {last_name}".strip()
+                    edit_user.profile.save()
+                
+                messages.success(request, f'Cập nhật người dùng "{edit_user.username}" thành công!')
+            else:
+                # Kiểm tra username đã tồn tại
+                if User.objects.filter(username=username).exists():
+                    messages.error(request, f'Tên đăng nhập "{username}" đã tồn tại!')
+                    return render(request, 'users/user_form.html', {'edit_user': edit_user})
+                
+                # Tạo user mới
+                new_user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password if password else 'password123',
+                    first_name=first_name,
+                    last_name=last_name,
+                    is_active=is_active
+                )
+                
+                # Profile sẽ được tạo tự động qua signal, cập nhật role
+                if hasattr(new_user, 'profile'):
+                    new_user.profile.role = role
+                    new_user.profile.full_name = f"{first_name} {last_name}".strip()
+                    new_user.profile.save()
+                
+                messages.success(request, f'Tạo người dùng "{username}" thành công!')
+            
+            return redirect('user_list')
+        except Exception as e:
+            messages.error(request, f'Lỗi: {str(e)}')
+    
+    return render(request, 'users/user_form.html', {'edit_user': edit_user})
+
+
+@login_required
+@admin_required
+def user_delete_view(request, pk):
+    """Xóa người dùng - Chỉ Admin"""
+    user_to_delete = get_object_or_404(User, pk=pk)
+    
+    # Không cho xóa chính mình
+    if user_to_delete == request.user:
+        messages.error(request, 'Không thể xóa tài khoản của chính mình!')
+        return redirect('user_list')
+    
+    # Không cho xóa superuser
+    if user_to_delete.is_superuser:
+        messages.error(request, 'Không thể xóa tài khoản Superuser!')
+        return redirect('user_list')
+    
+    username = user_to_delete.username
+    user_to_delete.delete()
+    messages.success(request, f'Đã xóa người dùng "{username}"!')
+    return redirect('user_list')

@@ -46,7 +46,9 @@
 <div class="card" style="margin-top: 20px;">
     <div class="card-header light">
         <h3><i class="fas fa-gift"></i> Lịch sử phát thưởng</h3>
+        {% if can_edit %}
         <a href="{% url 'khenthuong_form' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Thêm phát thưởng</a>
+        {% endif %}
     </div>
     <div class="card-body">
         <table class="table">

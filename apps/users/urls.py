@@ -30,4 +30,10 @@ urlpatterns = [
     # Khen thưởng
     path('khenthuong/', views.khenthuong_list_view, name='khenthuong_list'),
     path('khenthuong/add/', views.khenthuong_form_view, name='khenthuong_form'),
+    
+    # Quản lý người dùng (Admin only)
+    path('users/manage/', views.user_list_view, name='user_list'),
+    path('users/manage/add/', views.user_form_view, name='user_form'),
+    path('users/manage/<int:pk>/edit/', views.user_form_view, name='user_edit'),
+    path('users/manage/<int:pk>/delete/', views.user_delete_view, name='user_delete'),
 ]

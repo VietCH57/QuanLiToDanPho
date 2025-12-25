@@ -13,7 +13,9 @@
 <div class="card">
     <div class="card-header light">
         <h3><i class="fas fa-house-user"></i> Danh sách hộ khẩu</h3>
+        {% if can_edit %}
         <a href="{% url 'hokhau_form' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Thêm mới</a>
+        {% endif %}
     </div>
     <div class="card-body">
         <table class="table">
@@ -35,7 +37,9 @@
                     <td>{{ hokhau.thanh_vien_trong_ho.count }}</td>
                     <td>
                         <a href="{% url 'hokhau_detail' hokhau.pk %}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
+                        {% if can_edit %}
                         <a href="{% url 'hokhau_edit' hokhau.pk %}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}

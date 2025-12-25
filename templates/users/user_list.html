@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Quản lý người dùng - Quản lý Tổ Dân Phố{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard' %}">Trang chủ</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>Quản lý người dùng</span>
+    </div>
+    <h2><i class="fas fa-users-cog"></i> Quản lý người dùng</h2>
+    <p>Quản lý tài khoản và phân quyền trong hệ thống</p>
+</div>
+
+<!-- Thống kê -->
+<div class="stat-grid" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-info">
+            <h4>{{ users|length }}</h4>
+            <p>Tổng tài khoản</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        <div class="stat-info">
+            <h4>{{ users|length }}</h4>
+            <p>Quản trị viên</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-user-tie"></i>
+        </div>
+        <div class="stat-info">
+            <h4>0</h4>
+            <p>Quản lý</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-user"></i>
+        </div>
+        <div class="stat-info">
+            <h4>0</h4>
+            <p>Người dân</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-list"></i> Danh sách người dùng</h3>
+        <a href="{% url 'user_form' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i> Thêm người dùng
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Thông tin</th>
+                        <th>Email</th>
+                        <th>Vai trò</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày tạo</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="user-avatar-sm">
+                                    {{ u.username|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <strong>{{ u.username }}</strong>
+                                    {% if u.is_superuser %}
+                                        <span class="badge badge-superuser">Superuser</span>
+                                    {% endif %}
+                                    <br>
+                                    <small class="text-muted">{{ u.get_full_name|default:"-" }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ u.email|default:"-" }}</td>
+                        <td>
+                            {% if u.profile %}
+                                {% if u.profile.role == 'admin' %}
+                                    <span class="role-badge role-admin">
+                                        <i class="fas fa-shield-alt"></i> Quản trị viên
+                                    </span>
+                                {% elif u.profile.role == 'citizenship_manager' %}
+                                    <span class="role-badge role-citizenship">
+                                        <i class="fas fa-id-card"></i> QL Công dân
+                                    </span>
+                                {% elif u.profile.role == 'commendation_manager' %}
+                                    <span class="role-badge role-commendation">
+                                        <i class="fas fa-award"></i> QL Khen thưởng
+                                    </span>
+                                {% else %}
+                                    <span class="role-badge role-citizen">
+                                        <i class="fas fa-user"></i> Người dân
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="role-badge">Chưa cấu hình</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.is_active %}
+                                <span class="status-badge status-active">
+                                    <i class="fas fa-check-circle"></i> Hoạt động
+                                </span>
+                            {% else %}
+                                <span class="status-badge status-inactive">
+                                    <i class="fas fa-ban"></i> Đã khóa
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ u.date_joined|date:"d/m/Y" }}</td>
+                        <td class="actions">
+                            <a href="{% url 'user_edit' u.pk %}" class="action-btn edit" title="Sửa">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% if not u.is_superuser and u != request.user %}
+                            <a href="{% url 'user_delete' u.pk %}" 
+                               class="action-btn delete" 
+                               title="Xóa"
+                               onclick="return confirm('Bạn có chắc muốn xóa người dùng {{ u.username }}?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            <div class="empty-state">
+                                <i class="fas fa-users"></i>
+                                <p>Chưa có người dùng nào</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.user-avatar-sm {
+    width: 40px;
+    height: 40px;
+    background: var(--gradient-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.badge-superuser {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    margin-left: 8px;
+}
+
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.role-admin {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+}
+
+.role-citizenship {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+}
+
+.role-commendation {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    color: white;
+}
+
+.role-citizen {
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    color: white;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.status-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.action-btn.edit {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.action-btn.edit:hover {
+    background: #1976d2;
+    color: white;
+}
+
+.action-btn.delete {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.action-btn.delete:hover {
+    background: #c62828;
+    color: white;
+}
+
+.empty-state {
+    padding: 40px;
+    text-align: center;
+    color: var(--text-light);
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+</style>
+{% endblock %}
