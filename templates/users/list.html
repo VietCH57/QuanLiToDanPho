@@ -1,0 +1,611 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Qu?n l� Ngu?i d�ng{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard' %}">Trang ch?</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>Qu?n l� ngu?i d�ng</span>
+    </div>
+    <h2>Qu?n l� Ngu?i d�ng</h2>
+    <p>Qu?n l� t�i kho?n c�n b? v� ngu?i d�n trong h? th?ng</p>
+</div>
+
+<!-- Th?ng k� -->
+<div class="stat-grid" style="grid-template-columns:  repeat(5, 1fr);">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-info">
+            <h4>{{ total_users|default:125 }}</h4>
+            <p>T?ng t�i kho?n</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <i class="fas fa-user-tie"></i>
+        </div>
+        <div class="stat-info">
+            <h4>{{ total_canbo|default:5 }}</h4>
+            <p>C�n b?</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-user"></i>
+        </div>
+        <div class="stat-info">
+            <h4>{{ total_nguoidan|default:120 }}</h4>
+            <p>Ngu?i d�n</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-user-check"></i>
+        </div>
+        <div class="stat-info">
+            <h4>{{ active_users|default:118 }}</h4>
+            <p>�ang ho?t d?ng</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon red">
+            <i class="fas fa-user-clock"></i>
+        </div>
+        <div class="stat-info">
+            <h4>{{ pending_users|default:3 }}</h4>
+            <p>Ch? duy?t</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body" style="padding-bottom: 0;">
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="tab-canbo">
+                <i class="fas fa-user-tie"></i> C�n b? ({{ total_canbo|default:5 }})
+            </button>
+            <button class="tab-btn" data-tab="tab-nguoidan">
+                <i class="fas fa-user"></i> Ngu?i d�n ({{ total_nguoidan|default:120 }})
+            </button>
+            <button class="tab-btn" data-tab="tab-choduyet">
+                <i class="fas fa-user-clock"></i> Ch? duy?t 
+                {% if pending_users > 0 %}
+                <span class="badge" style="background:  var(--danger-color); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px;">{{ pending_users }}</span>
+                {% endif %}
+            </button>
+        </div>
+    </div>
+    
+    <!-- Tab:  C�n b? -->
+    <div class="tab-content active" id="tab-canbo">
+        <div class="card-header light" style="border-radius: 0;">
+            <h3><i class="fas fa-user-tie"></i> Danh s�ch c�n b?</h3>
+            <button class="btn btn-primary btn-sm" onclick="openModal('addCanboModal')">
+                <i class="fas fa-plus"></i> Th�m c�n b?
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Th�ng tin</th>
+                            <th>S? CCCD</th>
+                            <th>Vai tr�</th>
+                            <th>S? di?n tho?i</th>
+                            <th>Tr?ng th�i</th>
+                            <th>�ang nh?p cu?i</th>
+                            <th>Thao t�c</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in canbo_list %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 45px; height: 45px; background: var(--gradient-primary); border-radius: 50%; display:  flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                        {{ user.ho_ten|slice:": 1" }}
+                                    </div>
+                                    <div>
+                                        <strong>{{ user.ho_ten }}</strong>
+                                        <br><small style="color: var(--text-light);">{{ user.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ user.cccd }}</td>
+                            <td>
+                                <span class="status-badge" style="
+                                    {% if user.vai_tro == 'TO_TRUONG' %}background:  #fef3c7; color: #d97706;
+                                    {% elif user.vai_tro == 'TO_PHO' %}background: #dbeafe; color:  #2563eb;
+                                    {% else %}background: #f1f5f9; color: #64748b;{% endif %}">
+                                    {% if user.vai_tro == 'TO_TRUONG' %}<i class="fas fa-crown"></i>{% endif %}
+                                    {{ user.get_vai_tro_display }}
+                                </span>
+                            </td>
+                            <td>{{ user.so_dien_thoai }}</td>
+                            <td>
+                                {% if user.is_active %}
+                                <span class="status-badge status-approved">Ho?t d?ng</span>
+                                {% else %}
+                                <span class="status-badge status-rejected">�� kh�a</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.last_login %}
+                                {{ user.last_login|date:"d/m/Y H: i" }}
+                                {% else %}
+                                <span style="color: var(--text-light);">Chua dang nh?p</span>
+                                {% endif %}
+                            </td>
+                            <td class="actions">
+                                <button class="action-btn view" title="Xem" onclick="viewUser({{ user.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="action-btn edit" title="S?a" onclick="location.href='{% url 'user_edit' user.id %}'">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                {% if user.vai_tro != 'TO_TRUONG' %}
+                                <button class="action-btn delete" title="{% if user.is_active %}Kh�a{% else %}M? kh�a{% endif %}" 
+                                    onclick="toggleUserStatus({{ user.id }}, {{ user.is_active|yesno:'true,false' }})">
+                                    <i class="fas fa-{% if user.is_active %}lock{% else %}unlock{% endif %}"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="fas fa-user-tie"></i>
+                                    <h3>Chua c� c�n b?</h3>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab:  Ngu?i d�n -->
+    <div class="tab-content" id="tab-nguoidan">
+        <div class="card-header light" style="border-radius:  0;">
+            <h3><i class="fas fa-users"></i> Danh s�ch ngu?i d�n</h3>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary btn-sm" onclick="exportTableToExcel('nguoidanTable', 'danh_sach_nguoi_dung')">
+                    <i class="fas fa-file-excel"></i> Xu?t Excel
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-toolbar">
+                <div class="table-search">
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="form-control" placeholder="T�m theo t�n, CCCD, S�T..." id="searchNguoiDan">
+                    </div>
+                </div>
+                <div class="table-filters">
+                    <select class="form-control" style="width: auto;" id="filterTrangThai">
+                        <option value="">T?t c? tr?ng th�i</option>
+                        <option value="active">Ho?t d?ng</option>
+                        <option value="inactive">�� kh�a</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table" id="nguoidanTable">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Th�ng tin</th>
+                            <th>S? CCCD</th>
+                            <th>S? di?n tho?i</th>
+                            <th>�?a ch?</th>
+                            <th>Tr?ng th�i</th>
+                            <th>Ng�y dang k�</th>
+                            <th>Thao t�c</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in nguoidan_list %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 40px; height: 40px; background: #e0f2fe; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0284c7; font-weight: 600;">
+                                        {{ user.ho_ten|slice:":1" }}
+                                    </div>
+                                    <div>
+                                        <strong>{{ user.ho_ten }}</strong>
+                                        <br><small style="color: var(--text-light);">{{ user.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ user.cccd }}</td>
+                            <td>{{ user.so_dien_thoai }}</td>
+                            <td>{{ user.dia_chi|truncatechars:30 }}</td>
+                            <td>
+                                {% if user.is_active %}
+                                <span class="status-badge status-approved">Ho?t d?ng</span>
+                                {% else %}
+                                <span class="status-badge status-rejected">�� kh�a</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.date_joined|date:"d/m/Y" }}</td>
+                            <td class="actions">
+                                <button class="action-btn view" title="Xem" onclick="viewUser({{ user.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="action-btn edit" title="S?a" onclick="location.href='{% url 'user_edit' user.id %}'">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn delete" title="{% if user.is_active %}Kh�a{% else %}M? kh�a{% endif %}" 
+                                    onclick="toggleUserStatus({{ user.id }}, {{ user.is_active|yesno:'true,false' }})">
+                                    <i class="fas fa-{% if user.is_active %}lock{% else %}unlock{% endif %}"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="fas fa-users"></i>
+                                    <h3>Chua c� ngu?i d�n</h3>
+                                    <p>Chua c� t�i kho?n ngu?i d�n n�o trong h? th?ng</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if nguoidan_list.has_other_pages %}
+            <div class="pagination">
+                {% if nguoidan_list.has_previous %}
+                <a href="?page=1&tab=nguoidan"><i class="fas fa-angle-double-left"></i></a>
+                <a href="?page={{ nguoidan_list.previous_page_number }}&tab=nguoidan"><i class="fas fa-angle-left"></i></a>
+                {% endif %}
+                
+                {% for num in nguoidan_list.paginator.page_range %}
+                    {% if nguoidan_list.number == num %}
+                    <button class="active">{{ num }}</button>
+                    {% elif num > nguoidan_list.number|add:'-3' and num < nguoidan_list.number|add:'3' %}
+                    <a href="?page={{ num }}&tab=nguoidan">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if nguoidan_list.has_next %}
+                <a href="?page={{ nguoidan_list.next_page_number }}&tab=nguoidan"><i class="fas fa-angle-right"></i></a>
+                <a href="?page={{ nguoidan_list.paginator.num_pages }}&tab=nguoidan"><i class="fas fa-angle-double-right"></i></a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Tab: Ch? duy?t -->
+    <div class="tab-content" id="tab-choduyet">
+        <div class="card-header light" style="border-radius: 0;">
+            <h3><i class="fas fa-user-clock"></i> T�i kho?n ch? duy?t</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Th�ng tin</th>
+                            <th>S? CCCD</th>
+                            <th>S? di?n tho?i</th>
+                            <th>Ng�y dang k�</th>
+                            <th>Thao t�c</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in pending_list %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 40px; height: 40px; background: #fef3c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #d97706; font-weight: 600;">
+                                        {{ user.ho_ten|slice:":1" }}
+                                    </div>
+                                    <div>
+                                        <strong>{{ user.ho_ten }}</strong>
+                                        <br><small style="color: var(--text-light);">{{ user.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ user.cccd }}</td>
+                            <td>{{ user.so_dien_thoai }}</td>
+                            <td>{{ user.date_joined|date:"d/m/Y H:i" }}</td>
+                            <td class="actions">
+                                <button class="action-btn view" title="Xem" onclick="viewUser({{ user.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-success btn-sm" onclick="approveUser({{ user.id }})">
+                                    <i class="fas fa-check"></i> Duy?t
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="rejectUser({{ user.id }})">
+                                    <i class="fas fa-times"></i> T? ch?i
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <i class="fas fa-check-circle" style="color: var(--success-color);"></i>
+                                    <h3>Kh�ng c� t�i kho?n ch? duy?t</h3>
+                                    <p>T?t c? t�i kho?n d� du?c x? l�</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Th�m c�n b? -->
+<div class="modal" id="addCanboModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-plus"></i> Th�m c�n b? m?i</h3>
+            <button class="close-btn" onclick="closeModal('addCanboModal')">&times;</button>
+        </div>
+        <form method="post" action="{% url 'user_create_canbo' %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label class="required">H? v� t�n</label>
+                        <input type="text" class="form-control" name="ho_ten" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="required">S? CCCD</label>
+                        <input type="text" class="form-control" name="cccd" maxlength="12" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Email</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="required">S? di?n tho?i</label>
+                        <input type="text" class="form-control" name="so_dien_thoai" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Vai tr�</label>
+                        <select class="form-control" name="vai_tro" required>
+                            <option value="">-- Ch?n vai tr� --</option>
+                            <option value="TO_PHO">T? ph�</option>
+                            <option value="CAN_BO">C�n b?</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="required">M?t kh?u</label>
+                        <input type="password" class="form-control" name="password" required>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addCanboModal')">H?y</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Luu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Xem chi ti?t ngu?i d�ng -->
+<div class="modal" id="viewUserModal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3><i class="fas fa-user"></i> Th�ng tin ngu?i d�ng</h3>
+            <button class="close-btn" onclick="closeModal('viewUserModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="userDetailContent">
+            <!-- N?i dung s? du?c load b?ng AJAX -->
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('viewUserModal')">��ng</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        // Remove active from all
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Add active to clicked
+        this.classList.add('active');
+        document.getElementById(this.dataset.tab).classList.add('active');
+    });
+});
+
+// Search ngu?i d�n
+document.getElementById('searchNguoiDan')?.addEventListener('input', function() {
+    const searchText = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#nguoidanTable tbody tr');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchText) ? '' : 'none';
+    });
+});
+
+// Filter tr?ng th�i
+document.getElementById('filterTrangThai')?.addEventListener('change', function() {
+    const filterValue = this.value;
+    const rows = document.querySelectorAll('#nguoidanTable tbody tr');
+    rows.forEach(row => {
+        if (!filterValue) {
+            row.style.display = '';
+            return;
+        }
+        const status = row.querySelector('.status-badge');
+        if (status) {
+            const isActive = status.classList.contains('status-approved');
+            if ((filterValue === 'active' && isActive) || (filterValue === 'inactive' && !isActive)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+});
+
+// Xem chi ti?t ngu?i d�ng
+function viewUser(userId) {
+    fetch(`/users/${userId}/detail/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('userDetailContent').innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="width: 80px; height: 80px; background: var(--gradient-primary); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: 600;">
+                        ${data.ho_ten.charAt(0)}
+                    </div>
+                    <h3 style="margin: 15px 0 5px;">${data.ho_ten}</h3>
+                    <p style="color: var(--text-light);">${data.vai_tro_display}</p>
+                </div>
+                <div class="info-grid" style="display: grid; gap: 12px;">
+                    <div class="info-item">
+                        <label><i class="fas fa-id-card"></i> S? CCCD:</label>
+                        <span>${data.cccd}</span>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-envelope"></i> Email:</label>
+                        <span>${data.email}</span>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-phone"></i> S? di?n tho?i:</label>
+                        <span>${data.so_dien_thoai || 'Chua c?p nh?t'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-map-marker-alt"></i> �?a ch?:</label>
+                        <span>${data.dia_chi || 'Chua c?p nh?t'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-calendar"></i> Ng�y dang k�:</label>
+                        <span>${data.date_joined}</span>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-clock"></i> �ang nh?p cu?i:</label>
+                        <span>${data.last_login || 'Chua dang nh?p'}</span>
+                    </div>
+                </div>
+            `;
+            openModal('viewUserModal');
+        })
+        .catch(error => {
+            showNotification('Kh�ng th? t?i th�ng tin ngu?i d�ng', 'error');
+        });
+}
+
+// Toggle tr?ng th�i ngu?i d�ng (kh�a/m? kh�a)
+function toggleUserStatus(userId, currentStatus) {
+    const action = currentStatus ? 'kh�a' : 'm? kh�a';
+    if (confirm(`B?n c� ch?c mu?n ${action} t�i kho?n n�y?`)) {
+        fetch(`/users/${userId}/toggle-status/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                location.reload();
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('C� l?i x?y ra', 'error');
+        });
+    }
+}
+
+// Duy?t t�i kho?n
+function approveUser(userId) {
+    if (confirm('B?n c� ch?c mu?n duy?t t�i kho?n n�y?')) {
+        fetch(`/users/${userId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('�� duy?t t�i kho?n th�nh c�ng', 'success');
+                location.reload();
+            } else {
+                showNotification(data.message, 'error');
+            }
+        });
+    }
+}
+
+// T? ch?i t�i kho?n
+function rejectUser(userId) {
+    const reason = prompt('Nh?p l� do t? ch?i (kh�ng b?t bu?c):');
+    if (reason !== null) {
+        fetch(`/users/${userId}/reject/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reason: reason })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('�� t? ch?i t�i kho?n', 'success');
+                location.reload();
+            } else {
+                showNotification(data.message, 'error');
+            }
+        });
+    }
+}
+
+// Helper: l?y CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

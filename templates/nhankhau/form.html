@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}{% if nhankhau %}Sửa{% else %}Thêm{% endif %} Nhân khẩu{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard' %}">Trang chủ</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="{% url 'nhankhau_list' %}">Nhân khẩu</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>{% if nhankhau %}Sửa{% else %}Thêm mới{% endif %}</span>
+    </div>
+    <h2>{% if nhankhau %}Sửa{% else %}Thêm{% endif %} Nhân khẩu</h2>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Họ và tên</label>
+                <input type="text" class="form-control" name="ho_ten" value="{{ nhankhau.ho_ten|default:'' }}" required>
+            </div>
+            <div class="form-group">
+                <label>CCCD</label>
+                <input type="text" class="form-control" name="cccd" value="{{ nhankhau.cccd|default:'' }}" maxlength="12">
+            </div>
+            <div class="form-group">
+                <label>Ngày sinh</label>
+                <input type="date" class="form-control" name="ngay_sinh" value="{{ nhankhau.ngay_sinh|date:'Y-m-d' }}" required>
+            </div>
+            <div class="form-group">
+                <label>Giới tính</label>
+                <select class="form-control" name="gioi_tinh">
+                    <option value="Nam" {% if nhankhau.gioi_tinh == 'Nam' %}selected{% endif %}>Nam</option>
+                    <option value="Nu" {% if nhankhau.gioi_tinh == 'Nu' %}selected{% endif %}>Nữ</option>
+                    <option value="Khac" {% if nhankhau.gioi_tinh == 'Khac' %}selected{% endif %}>Khác</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Hộ gia đình</label>
+                <select class="form-control" name="ho_gia_dinh" required>
+                    <option value="">-- Chọn hộ gia đình --</option>
+                    {% for hk in hokhau_list %}
+                    <option value="{{ hk.pk }}" {% if nhankhau.ho_gia_dinh_id == hk.pk %}selected{% endif %}>
+                        {{ hk.ma_ho }} - {{ hk.dia_chi }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Quan hệ với chủ hộ</label>
+                <input type="text" class="form-control" name="quan_he_chu_ho" value="{{ nhankhau.quan_he_chu_ho|default:'' }}" placeholder="VD: Vợ, Con, Cha, Mẹ...">
+            </div>
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a href="{% url 'nhankhau_list' %}" class="btn btn-secondary">Hủy</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

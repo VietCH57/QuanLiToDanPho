@@ -1,0 +1,67 @@
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-user">
+        <div class="user-avatar">
+            <i class="fas fa-user"></i>
+        </div>
+        <div class="user-name">{{ user.first_name|default:user.username }}</div>
+        <div class="user-role">
+            {% if user.profile.role == 'admin' %}
+                Quản trị viên
+            {% elif user.profile.role == 'citizenship_manager' %}
+                Quản lý công dân
+            {% elif user.profile.role == 'commendation_manager' %}
+                Quản lý khen thưởng
+            {% else %}
+                Người dân
+            {% endif %}
+        </div>
+    </div>
+    
+    <nav class="sidebar-menu">
+        <div class="menu-section">Menu chính</div>
+        
+        <a href="{% url 'dashboard' %}" class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <i class="fas fa-home"></i>
+            Trang chủ
+        </a>
+        
+        <a href="{% url 'nhankhau_list' %}" class="menu-item {% if 'nhankhau' in request.path %}active{% endif %}">
+            <i class="fas fa-users"></i>
+            Nhân khẩu
+        </a>
+        
+        <a href="{% url 'hokhau_list' %}" class="menu-item {% if 'hokhau' in request.path %}active{% endif %}">
+            <i class="fas fa-house-user"></i>
+            Hộ khẩu
+        </a>
+        
+        <a href="{% url 'tamtru_list' %}" class="menu-item {% if 'tamtru' in request.path %}active{% endif %}">
+            <i class="fas fa-suitcase"></i>
+            Tạm trú - Tạm vắng
+        </a>
+        
+        <div class="menu-section">Tiện ích</div>
+        
+        <a href="{% url 'khenthuong_list' %}" class="menu-item {% if 'khenthuong' in request.path %}active{% endif %}">
+            <i class="fas fa-gift"></i>
+            Khen thưởng
+        </a>
+        
+        <a href="{% url 'profile' %}" class="menu-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+            <i class="fas fa-user-circle"></i>
+            Thông tin cá nhân
+        </a>
+        
+        <a href="{% url 'change_password' %}" class="menu-item {% if request.resolver_match.url_name == 'change_password' %}active{% endif %}">
+            <i class="fas fa-key"></i>
+            Đổi mật khẩu
+        </a>
+        
+        <div class="menu-logout">
+            <a href="{% url 'logout' %}" class="menu-item">
+                <i class="fas fa-sign-out-alt"></i>
+                Đăng xuất
+            </a>
+        </div>
+    </nav>
+</aside>

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Quản lý Nhân khẩu{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard' %}">Trang chủ</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>Nhân khẩu</span>
+    </div>
+    <h2>Quản lý Nhân khẩu</h2>
+    <p>Danh sách và quản lý thông tin nhân khẩu trong tổ dân phố</p>
+</div>
+<div class="card">
+    <div class="card-header light">
+        <h3><i class="fas fa-users"></i> Danh sách nhân khẩu</h3>
+        <a href="{% url 'nhankhau_form' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Thêm mới</a>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Họ và tên</th>
+                    <th>CCCD</th>
+                    <th>Ngày sinh</th>
+                    <th>Giới tính</th>
+                    <th>Hộ khẩu</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for nhankhau in nhankhau_list %}
+                <tr>
+                    <td>{{ nhankhau.ho_ten }}</td>
+                    <td>{{ nhankhau.cccd|default:"--" }}</td>
+                    <td>{{ nhankhau.ngay_sinh|date:"d/m/Y" }}</td>
+                    <td>{{ nhankhau.get_gioi_tinh_display|default:nhankhau.gioi_tinh }}</td>
+                    <td>{{ nhankhau.ho_gia_dinh.ma_ho }}</td>
+                    <td>
+                        <a href="{% url 'nhankhau_detail' nhankhau.pk %}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
+                        <a href="{% url 'nhankhau_edit' nhankhau.pk %}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">Chưa có dữ liệu nhân khẩu</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Trang ch? - T? tru?ng{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Xin chào, {{ user.ho_ten }}! ??</h2>
+    <p>T? tru?ng - T? Dân Ph? S? 5, Phu?ng D?ch V?ng</p>
+</div>
+
+<!-- Th?ng kê t?ng h?p -->
+<div class="stat-grid">
+    <div class="stat-card" onclick="location.href='{% url 'nhankhau_list' %}'">
+        <div class="stat-icon blue">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-info">
+            <h4>{{ total_nhankhau|default:1250 }}</h4>
+            <p>T?ng nhân kh?u</p>
+            <span class="stat-change up"><i class="fas fa-arrow-up"></i> +15 tháng này</span>
+        </div>
+    </div>
+    
+    <div class="stat-card" onclick="location.href='{% url 'hokhau_list' %}'">
+        <div class="stat-icon green">
+            <i class="fas fa-home"></i>
+        </div>
+        <div class="stat-info">
+            <h4>{{ total_hokhau|default:320 }}</h4>
+            <p>T?ng h? kh?u</p>
+            <span class="stat-change up"><i class="fas fa-arrow-up"></i> +5 tháng này</span>
+        </div>
+    </div>
+    
+    <div class="stat-card" onclick="location.href='{% url 'tamtru_list' %}'">
+        <div class="stat-icon orange">
+            <i class="fas fa-suitcase"></i>
+        </div>
+        <div class="stat-info">
+            <h4>{{ total_tamtru|default:45 }}</h4>
+            <p>Ðang t?m trú</p>
+        </div>
+    </div>
+    
+    <div class="stat-card" onclick="location.href='{% url 'hoso_pending' %}'">
+        <div class="stat-icon red">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-info">
+            <h4>{{ pending_hoso|default:8 }}</h4>
+            <p>H? so ch? duy?t</p>
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+    <!-- Bi?u d? th?ng kê -->
+    <div class="card">
+        <div class="card-header light">
+            <h3><i class="fas fa-chart-bar"></i> Th?ng kê nhân kh?u theo tháng</h3>
+            <select class="form-control" style="width: auto; padding: 8px 12px;">
+                <option>Nam 2024</option>
+                <option>Nam 2023</option>
+            </select>
+        </div>
+        <div class="card-body">
+            <canvas id="nhankhauChart" height="250"></canvas>
+        </div>
+    </div>
+    
+    <!-- Th?ng kê theo lo?i -->
+    <div class="card">
+        <div class="card-header light">
+            <h3><i class="fas fa-chart-pie"></i> Phân lo?i cu trú</h3>
+        </div>
+        <div class="card-body">
+            <canvas id="cutruChart" height="250"></canvas>
+            
+            <div style="margin-top: 20px;">
+                <div style="display: flex; justify-content:  space-between; margin-bottom: 10px;">
+                    <span><i class="fas fa-circle" style="color: #1e3a8a;"></i> Thu?ng trú</span>
+                    <strong>85%</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span><i class="fas fa-circle" style="color: #f59e0b;"></i> T?m trú</span>
+                    <strong>12%</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span><i class="fas fa-circle" style="color: #10b981;"></i> T?m v?ng</span>
+                    <strong>3%</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+    <!-- Ho?t d?ng g?n dây -->
+    <div class="card">
+        <div class="card-header light">
+            <h3><i class="fas fa-history"></i> Ho?t d?ng g?n dây</h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <ul class="notification-list">
+                <li class="notification-item">
+                    <div class="notification-icon" style="background: var(--success-color);">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>Duy?t h? so nh?p kh?u</h4>
+                        <p>Nguy?n Van A - Mã HS: NK2024001</p>
+                    </div>
+                    <span class="notification-time">5 phút tru?c</span>
+                </li>
+                <li class="notification-item">
+                    <div class="notification-icon" style="background: var(--primary-color);">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>Thêm m?i nhân kh?u</h4>
+                        <p>Tr?n Th? B - CCCD: 001234567890</p>
+                    </div>
+                    <span class="notification-time">1 gi? tru?c</span>
+                </li>
+                <li class="notification-item">
+                    <div class="notification-icon" style="background: var(--warning-color);">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>C?p nh?t thông tin h? kh?u</h4>
+                        <p>H? kh?u s?: HK2024050</p>
+                    </div>
+                    <span class="notification-time">2 gi? tru?c</span>
+                </li>
+                <li class="notification-item">
+                    <div class="notification-icon" style="background: var(--danger-color);">
+                        <i class="fas fa-times"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>T? ch?i h? so tách h?</h4>
+                        <p>Lý do:  Thi?u gi?y t?</p>
+                    </div>
+                    <span class="notification-time">3 gi? tru?c</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Qu?n lý cán b? -->
+    <div class="card">
+        <div class="card-header light">
+            <h3><i class="fas fa-user-tie"></i> Cán b? t? dân ph?</h3>
+            <a href="{% url 'user_list' %}" class="btn btn-sm btn-outline">Qu?n lý</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <ul class="notification-list">
+                {% for canbo in canbo_list %}
+                <li class="notification-item">
+                    <div class="notification-icon" style="background: var(--gradient-primary);">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>{{ canbo.ho_ten }}</h4>
+                        <p>{{ canbo.get_vai_tro_display }}</p>
+                    </div>
+                    <span class="status-badge {% if canbo.is_active %}status-active{% else %}status-inactive{% endif %}">
+                        {% if canbo.is_active %}Ho?t d?ng{% else %}Ngung{% endif %}
+                    </span>
+                </li>
+                {% empty %}
+                <li class="notification-item">
+                    <div class="notification-icon" style="background: var(--gradient-primary);">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>Nguy?n Th? Lan</h4>
+                        <p>Cán b? Nhân kh?u</p>
+                    </div>
+                    <span class="status-badge status-active">Ho?t d?ng</span>
+                </li>
+                <li class="notification-item">
+                    <div class="notification-icon" style="background: var(--gradient-primary);">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>Tr?n Van Hùng</h4>
+                        <p>Cán b? Hành chính</p>
+                    </div>
+                    <span class="status-badge status-active">Ho?t d?ng</span>
+                </li>
+                <li class="notification-item">
+                    <div class="notification-icon" style="background: var(--gradient-primary);">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>Lê Minh Tu?n</h4>
+                        <p>T? phó</p>
+                    </div>
+                    <span class="status-badge status-active">Ho?t d?ng</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Bi?u d? nhân kh?u theo tháng
+const ctx1 = document.getElementById('nhankhauChart').getContext('2d');
+new Chart(ctx1, {
+    type:  'bar',
+    data:  {
+        labels:  ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+        datasets: [{
+            label: 'Nh?p kh?u',
+            data: [12, 19, 8, 15, 12, 8, 14, 18, 10, 15, 12, 20],
+            backgroundColor: '#1e3a8a',
+            borderRadius: 5
+        }, {
+            label: 'Chuy?n di',
+            data:  [5, 8, 4, 6, 3, 5, 7, 9, 4, 6, 5, 8],
+            backgroundColor: '#f59e0b',
+            borderRadius:  5
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero:  true
+            }
+        }
+    }
+});
+
+// Bi?u d? phân lo?i cu trú
+const ctx2 = document.getElementById('cutruChart').getContext('2d');
+new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+        labels: ['Thu?ng trú', 'T?m trú', 'T?m v?ng'],
+        datasets: [{
+            data: [85, 12, 3],
+            backgroundColor: ['#1e3a8a', '#f59e0b', '#10b981'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        cutout: '70%'
+    }
+});
+</script>
+{% endblock %}
+

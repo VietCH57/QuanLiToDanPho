@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Quản lý Khen thưởng{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard' %}">Trang chủ</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>Khen thưởng</span>
+    </div>
+    <h2>Quản lý Khen thưởng</h2>
+    <p>Danh sách các đợt khen thưởng và phát quà trong tổ dân phố</p>
+</div>
+
+<!-- Danh mục phần thưởng -->
+<div class="card">
+    <div class="card-header light">
+        <h3><i class="fas fa-medal"></i> Danh mục phần thưởng</h3>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Tên phần thưởng</th>
+                    <th>Giá trị</th>
+                    <th>Mô tả</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pt in phanthuong_list %}
+                <tr>
+                    <td>{{ pt.ten_phan_thuong }}</td>
+                    <td>{{ pt.gia_tri|floatformat:0 }} VNĐ</td>
+                    <td>{{ pt.mo_ta|default:"--" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center">Chưa có danh mục phần thưởng</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Lịch sử phát thưởng -->
+<div class="card" style="margin-top: 20px;">
+    <div class="card-header light">
+        <h3><i class="fas fa-gift"></i> Lịch sử phát thưởng</h3>
+        <a href="{% url 'khenthuong_form' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Thêm phát thưởng</a>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Người nhận</th>
+                    <th>Phần thưởng</th>
+                    <th>Đợt phát</th>
+                    <th>Ngày cấp</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ls in lichsu_list %}
+                <tr>
+                    <td>{{ ls.thanh_vien.ho_ten }}</td>
+                    <td>{{ ls.phan_thuong.ten_phan_thuong }}</td>
+                    <td>{{ ls.dot_phat }}</td>
+                    <td>{{ ls.ngay_cap_phat|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if ls.trang_thai == 'DaNhan' %}
+                        <span class="badge badge-success">Đã nhận</span>
+                        {% else %}
+                        <span class="badge badge-warning">Chưa nhận</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">Chưa có lịch sử phát thưởng</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
