@@ -3,6 +3,10 @@ Django settings for QuanLiToDanPho project.
 """
 from pathlib import Path
 
+# Uncomment 2 dòng dưới nếu dùng pymysql thay vì mysqlclient
+# import pymysql
+# pymysql.install_as_MySQLdb()
+
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -33,27 +37,36 @@ INSTALLED_APPS = [
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+
+# --- CHỌN 1 TRONG 2 CẤU HÌNH BÊN DƯỚI ---
+
+# CẤU HÌNH 1: SQLite (Mặc định - Đơn giản, không cần cài gì)
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+# CẤU HÌNH 2: MySQL (Production - Nhanh hơn, đa người dùng)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'QLToDanPho',
+        'USER': 'root',
+        'PASSWORD': '123456',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'charset': 'utf8mb4',
+        }
     }
 }
 
-# For MySQL production (uncomment and configure):
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'quanlytodanpho',
-#         'USER': 'root',
-#         'PASSWORD': '123456',
-#         'HOST': '127.0.0.1',
-#         'PORT': '3306',
-#         'OPTIONS': {
-#             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
-#         }
-#     }
-# }
+# Nếu dùng pymysql thay vì mysqlclient, uncomment 2 dòng dưới:
+# import pymysql
+# pymysql.install_as_MySQLdb()
 
 
 # Password validation

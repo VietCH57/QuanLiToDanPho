@@ -1,3 +1,8 @@
 Django>=4.2
 djangorestframework
 python-dotenv
+Pillow
+
+# MySQL Drivers (chọn 1 trong 2):
+# mysqlclient  # Nhanh hơn, cần Visual C++ Build Tools trên Windows
+# pymysql      # Pure Python, dễ cài hơn
