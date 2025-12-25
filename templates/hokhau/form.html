@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}{% if hokhau %}Sửa{% else %}Thêm{% endif %} Hộ khẩu{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard' %}">Trang chủ</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="{% url 'hokhau_list' %}">Hộ khẩu</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>{% if hokhau %}Sửa{% else %}Thêm mới{% endif %}</span>
+    </div>
+    <h2>{% if hokhau %}Sửa{% else %}Thêm{% endif %} Hộ khẩu</h2>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Mã hộ</label>
+                <input type="text" class="form-control" name="ma_ho" value="{{ hokhau.ma_ho|default:'' }}" required>
+            </div>
+            <div class="form-group">
+                <label>Địa chỉ</label>
+                <input type="text" class="form-control" name="dia_chi" value="{{ hokhau.dia_chi|default:'' }}" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a href="{% url 'hokhau_list' %}" class="btn btn-secondary">Hủy</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

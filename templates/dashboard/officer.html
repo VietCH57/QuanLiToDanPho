@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Trang ch? - Cán b?{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Xin chào, {{ user.ho_ten }}!  ??</h2>
+    <p>{{ user.get_vai_tro_display }} - T? Dân Ph? S? 5</p>
+</div>
+
+<!-- Th?ng kê -->
+<div class="stat-grid">
+    <div class="stat-card" onclick="location.href='{% url 'hoso_pending' %}'">
+        <div class="stat-icon orange">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-info">
+            <h4>{{ pending_count|default:12 }}</h4>
+            <p>H? so ch? duy?t</p>
+            <span class="stat-change up"><i class="fas fa-arrow-up"></i> 3 h? so m?i</span>
+        </div>
+    </div>
+    
+    <div class="stat-card" onclick="location.href='{% url 'hoso_today' %}'">
+        <div class="stat-icon blue">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <div class="stat-info">
+            <h4>{{ today_count|default:5 }}</h4>
+            <p>X? lý hôm nay</p>
+        </div>
+    </div>
+    
+    <div class="stat-card" onclick="location.href='{% url 'nhankhau_list' %}'">
+        <div class="stat-icon green">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-info">
+            <h4>{{ nhankhau_count|default:1250 }}</h4>
+            <p>T?ng nhân kh?u</p>
+        </div>
+    </div>
+    
+    <div class="stat-card" onclick="location.href='{% url 'hokhau_list' %}'">
+        <div class="stat-icon purple">
+            <i class="fas fa-home"></i>
+        </div>
+        <div class="stat-info">
+            <h4>{{ hokhau_count|default:320 }}</h4>
+            <p>T?ng h? kh?u</p>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<h3 style="margin-bottom: 15px; color: var(--text-dark);">Thao tác nhanh</h3>
+<div class="quick-actions">
+    <a href="{% url 'nhankhau_form' %}" class="action-item">
+        <div class="action-icon" style="background:  var(--gradient-primary);">
+            <i class="fas fa-user-plus"></i>
+        </div>
+        <span>Thêm nhân kh?u</span>
+    </a>
+    
+    <a href="{% url 'hokhau_form' %}" class="action-item">
+        <div class="action-icon" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%);">
+            <i class="fas fa-house-user"></i>
+        </div>
+        <span>Thêm h? kh?u</span>
+    </a>
+    
+    <a href="{% url 'tamtru_create' %}" class="action-item">
+        <div class="action-icon" style="background:  linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">
+            <i class="fas fa-suitcase"></i>
+        </div>
+        <span>Ðang ký t?m trú</span>
+    </a>
+    
+    <a href="{% url 'khenthuong_create' %}" class="action-item">
+        <div class="action-icon" style="background:  linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);">
+            <i class="fas fa-gift"></i>
+        </div>
+        <span>T?o d?t khen thu?ng</span>
+    </a>
+</div>
+
+<!-- H? so ch? x? lý -->
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-tasks"></i> H? so ch? x? lý</h3>
+        <a href="{% url 'hoso_pending' %}" class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: white;">
+            Xem t?t c? <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Mã h? so</th>
+                        <th>Lo?i h? so</th>
+                        <th>Ngu?i n?p</th>
+                        <th>Ngày n?p</th>
+                        <th>Tr?ng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for hoso in pending_hoso_list %}
+                    <tr>
+                        <td><strong>{{ hoso.ma_ho_so }}</strong></td>
+                        <td>{{ hoso.loai_ho_so }}</td>
+                        <td>{{ hoso.nguoi_nop.ho_ten }}</td>
+                        <td>{{ hoso.ngay_nop|date:"d/m/Y" }}</td>
+                        <td><span class="status-badge status-pending">Ch? duy?t</span></td>
+                        <td class="actions">
+                            <button class="action-btn view" title="Xem chi ti?t" onclick="location.href='{% url 'hoso_detail' hoso.id %}'">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn approve" title="Duy?t" onclick="approveHoso({{ hoso.id }})">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="action-btn delete" title="T? ch?i" onclick="rejectHoso({{ hoso.id }})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px;">
+                            <i class="fas fa-check-circle" style="font-size: 48px; color: #10b981; margin-bottom: 15px; display: block;"></i>
+                            <p>Không có h? so nào dang ch? x? lý</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Duy?t h? so -->
+<div class="modal-overlay" id="approveModal">
+    <div class="modal">
+        <div class="modal-header" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%);">
+            <h3><i class="fas fa-check-circle"></i> Duy?t h? so</h3>
+            <button class="modal-close" onclick="closeModal('approveModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p>B?n có ch?c ch?n mu?n <strong>duy?t</strong> h? so này?</p>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>Ghi chú (không b?t bu?c)</label>
+                <textarea class="form-control" id="approveNote" placeholder="Nh?p ghi chú n?u có... "></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('approveModal')">H?y</button>
+            <button class="btn btn-success" onclick="submitApprove()">
+                <i class="fas fa-check"></i> Xác nh?n duy?t
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal T? ch?i h? so -->
+<div class="modal-overlay" id="rejectModal">
+    <div class="modal">
+        <div class="modal-header" style="background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);">
+            <h3><i class="fas fa-times-circle"></i> T? ch?i h? so</h3>
+            <button class="modal-close" onclick="closeModal('rejectModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p>B?n có ch?c ch?n mu?n <strong>t? ch?i</strong> h? so này?</p>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>Lý do t? ch?i <span class="required">*</span></label>
+                <textarea class="form-control" id="rejectReason" placeholder="Nh?p lý do t? ch?i..." required></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('rejectModal')">H?y</button>
+            <button class="btn btn-danger" onclick="submitReject()">
+                <i class="fas fa-times"></i> Xác nh?n t? ch?i
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentHosoId = null;
+
+function approveHoso(id) {
+    currentHosoId = id;
+    openModal('approveModal');
+}
+
+function rejectHoso(id) {
+    currentHosoId = id;
+    openModal('rejectModal');
+}
+
+function submitApprove() {
+    const note = document.getElementById('approveNote').value;
+    showLoading();
+    
+    fetch(`/api/hoso/${currentHosoId}/approve/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type':  'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ note: note })
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        closeModal('approveModal');
+        if (data.success) {
+            showAlert('Ðã duy?t h? so thành công!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert(data.message || 'Có l?i x?y ra!', 'error');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        showAlert('Có l?i x?y ra! ', 'error');
+    });
+}
+
+function submitReject() {
+    const reason = document.getElementById('rejectReason').value;
+    if (!reason.trim()) {
+        showAlert('Vui lòng nh?p lý do t? ch?i!', 'warning');
+        return;
+    }
+    
+    showLoading();
+    
+    fetch(`/api/hoso/${currentHosoId}/reject/`, {
+        method: 'POST',
+        headers:  {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        closeModal('rejectModal');
+        if (data.success) {
+            showAlert('Ðã t? ch?i h? so! ', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert(data.message|| 'Có l?i x?y ra! ', 'error');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        showAlert('Có l?i x?y ra!', 'error');
+    });
+}
+</script>
+{% endblock %}
+

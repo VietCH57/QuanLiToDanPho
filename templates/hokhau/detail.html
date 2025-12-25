@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Chi tiết Hộ khẩu - {{ hokhau.ma_ho }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard' %}">Trang chủ</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="{% url 'hokhau_list' %}">Hộ khẩu</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>{{ hokhau.ma_ho }}</span>
+    </div>
+    <h2>Chi tiết Hộ khẩu</h2>
+</div>
+
+<!-- Thông tin hộ -->
+<div class="card" style="margin-bottom: 25px;">
+    <div class="card-header">
+        <h3><i class="fas fa-home"></i> Thông tin Hộ khẩu: {{ hokhau.ma_ho }}</h3>
+        {% if can_edit %}
+        <a href="{% url 'hokhau_edit' hokhau.pk %}" class="btn btn-warning btn-sm">
+            <i class="fas fa-edit"></i> Chỉnh sửa
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <tr>
+                <th style="width: 200px;">Mã hộ</th>
+                <td>{{ hokhau.ma_ho }}</td>
+            </tr>
+            <tr>
+                <th>Chủ hộ</th>
+                <td>{{ hokhau.chu_ho.ho_ten|default:"Chưa xác định" }}</td>
+            </tr>
+            <tr>
+                <th>Địa chỉ</th>
+                <td>{{ hokhau.dia_chi }}</td>
+            </tr>
+            <tr>
+                <th>Số thành viên</th>
+                <td><strong>{{ thanh_vien_list.count }}</strong> người</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<!-- Danh sách thành viên -->
+<div class="card">
+    <div class="card-header light">
+        <h3><i class="fas fa-users"></i> Danh sách thành viên trong hộ</h3>
+        {% if can_edit %}
+        <a href="{% url 'nhankhau_form' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i> Thêm thành viên
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Họ và tên</th>
+                    <th>CCCD</th>
+                    <th>Ngày sinh</th>
+                    <th>Giới tính</th>
+                    <th>Quan hệ với chủ hộ</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tv in thanh_vien_list %}
+                <tr>
+                    <td>
+                        {{ tv.ho_ten }}
+                        {% if tv.la_chu_ho %}
+                        <span class="badge badge-primary">Chủ hộ</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ tv.cccd|default:"--" }}</td>
+                    <td>{{ tv.ngay_sinh|date:"d/m/Y" }}</td>
+                    <td>{{ tv.get_gioi_tinh_display|default:tv.gioi_tinh }}</td>
+                    <td>{{ tv.quan_he_chu_ho|default:"--" }}</td>
+                    <td>
+                        <a href="{% url 'nhankhau_detail' tv.pk %}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
+                        {% if can_edit %}
+                        <a href="{% url 'nhankhau_edit' tv.pk %}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">Chưa có thành viên trong hộ</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div style="margin-top: 20px;">
+    <a href="{% url 'hokhau_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Quay lại danh sách
+    </a>
+</div>
+{% endblock %}

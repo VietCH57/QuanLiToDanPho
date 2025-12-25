@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Quản lý Tạm trú - Tạm vắng{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard' %}">Trang chủ</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>Tạm trú - Tạm vắng</span>
+    </div>
+    <h2>Quản lý Tạm trú - Tạm vắng</h2>
+    <p>Danh sách đăng ký tạm trú, tạm vắng trong tổ dân phố</p>
+</div>
+
+<!-- Tạm trú -->
+<div class="card">
+    <div class="card-header light">
+        <h3><i class="fas fa-suitcase"></i> Danh sách Tạm trú</h3>
+        {% if can_edit %}
+        <a href="{% url 'tamtru_form' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Đăng ký mới</a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Họ tên</th>
+                    <th>Địa chỉ tạm trú</th>
+                    <th>Từ ngày</th>
+                    <th>Đến ngày</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in tamtru_list %}
+                <tr>
+                    <td>{{ item.thanh_vien.ho_ten }}</td>
+                    <td>{{ item.dia_chi_tam_tru }}</td>
+                    <td>{{ item.ngay_bat_dau|date:"d/m/Y" }}</td>
+                    <td>{{ item.ngay_ket_thuc|date:"d/m/Y"|default:"--" }}</td>
+                    <td>
+                        {% if item.trang_thai == 'DaDuyet' %}
+                        <span class="badge badge-success">Đã duyệt</span>
+                        {% elif item.trang_thai == 'TuChoi' %}
+                        <span class="badge badge-danger">Từ chối</span>
+                        {% else %}
+                        <span class="badge badge-warning">Chờ duyệt</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">Chưa có dữ liệu tạm trú</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Tạm vắng -->
+<div class="card" style="margin-top: 20px;">
+    <div class="card-header light">
+        <h3><i class="fas fa-plane-departure"></i> Danh sách Tạm vắng</h3>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Họ tên</th>
+                    <th>Nơi đến</th>
+                    <th>Ngày đi</th>
+                    <th>Ngày về dự kiến</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in tamvang_list %}
+                <tr>
+                    <td>{{ item.thanh_vien.ho_ten }}</td>
+                    <td>{{ item.noi_den }}</td>
+                    <td>{{ item.ngay_bat_dau|date:"d/m/Y" }}</td>
+                    <td>{{ item.ngay_ket_thuc|date:"d/m/Y"|default:"--" }}</td>
+                    <td>
+                        {% if item.trang_thai == 'DaDuyet' %}
+                        <span class="badge badge-success">Đã duyệt</span>
+                        {% elif item.trang_thai == 'TuChoi' %}
+                        <span class="badge badge-danger">Từ chối</span>
+                        {% else %}
+                        <span class="badge badge-warning">Chờ duyệt</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">Chưa có dữ liệu tạm vắng</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

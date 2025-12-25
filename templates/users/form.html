@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if edit_user %}Ch?nh s?a{% else %}Th�m{% endif %} Ngu?i d�ng{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard' %}">Trang ch?</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="{% url 'user_list' %}">Ngu?i d�ng</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>{% if edit_user %}Ch?nh s?a{% else %}Th�m m?i{% endif %}</span>
+    </div>
+    <h2>{% if edit_user %}Ch?nh s?a ngu?i d�ng:  {{ edit_user.username }}{% else %}Th�m ngu?i d�ng m?i{% endif %}</h2>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="userForm">
+    {% csrf_token %}
+    
+    <!-- Th�ng tin t�i kho?n -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-user-circle"></i> Th�ng tin t�i kho?n</h3>
+        </div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>T�n dang nh?p <span class="required">*</span></label>
+                    <input type="text" name="username" class="form-control" 
+                        placeholder="Nh?p t�n dang nh?p" 
+                        value="{{ edit_user.username|default:'' }}" 
+                        {% if edit_user %}readonly{% endif %} required>
+                    {% if edit_user %}
+                    <div class="form-hint">T�n dang nh?p kh�ng th? thay d?i</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" class="form-control" 
+                        placeholder="Nh?p email" 
+                        value="{{ edit_user.email|default:'' }}">
+                </div>
+            </div>
+            
+            {% if not edit_user %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label>M?t kh?u <span class="required">*</span></label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="password" class="form-control" id="password"
+                            placeholder="Nh?p m?t kh?u" required minlength="6" style="padding-left: 45px;">
+                    </div>
+                    <div class="form-hint">M?t kh?u �t nh?t 6 k� t?</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>X�c nh?n m?t kh?u <span class="required">*</span></label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="password_confirm" class="form-control" 
+                            placeholder="Nh?p l?i m?t kh?u" required style="padding-left:  45px;">
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="form-group">
+                <label>M?t kh?u m?i (d? tr?ng n?u kh�ng d?i)</label>
+                <div class="input-icon-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" class="form-control" 
+                        placeholder="Nh?p m?t kh?u m?i" minlength="6" style="padding-left: 45px;">
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Th�ng tin c� nh�n -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-id-card"></i> Th�ng tin c� nh�n</h3>
+        </div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>H? v� t�n <span class="required">*</span></label>
+                    <input type="text" name="full_name" class="form-control" 
+                        placeholder="Nh?p h? v� t�n d?y d?" 
+                        value="{{ edit_user.profile.full_name|default:'' }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>S? CCCD <span class="required">*</span></label>
+                    <input type="text" name="cccd_id" class="form-control" 
+                        placeholder="Nh?p s? CCCD 12 s?" 
+                        value="{{ edit_user.profile.cccd_id|default:'' }}" 
+                        maxlength="12" pattern="[0-9]{12}" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>�on v? c�ng t�c</label>
+                    <input type="text" name="working_unit_id" class="form-control" 
+                        placeholder="Nh?p m� don v? c�ng t�c" 
+                        value="{{ edit_user.profile.working_unit_id|default:'' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label>Vai tr� <span class="required">*</span></label>
+                    <select name="role" class="form-control" required>
+                        <option value="">-- Ch?n vai tr� --</option>
+                        <option value="admin" {% if edit_user.profile.role == 'admin' %}selected{% endif %}>Qu?n tr? vi�n</option>
+                        <option value="citizenship_manager" {% if edit_user.profile.role == 'citizenship_manager' %}selected{% endif %}>Qu?n l� c�ng d�n</option>
+                        <option value="commendation_manager" {% if edit_user.profile.role == 'commendation_manager' %}selected{% endif %}>Qu?n l� khen thu?ng</option>
+                        <option value="citizen" {% if edit_user.profile.role == 'citizen' %}selected{% endif %}>D�n cu</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-check-label" style="display: flex; align-items:  center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" name="is_active" class="form-check-input" 
+                        style="width: 20px; height: 20px;"
+                        {% if edit_user.profile.is_active or not edit_user %}checked{% endif %}>
+                    <span>T�i kho?n dang ho?t d?ng</span>
+                </label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Buttons -->
+    <div style="display: flex; gap: 10px; margin-top:  20px;">
+        <a href="{% url 'user_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay l?i
+        </a>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> {% if edit_user %}C?p nh?t{% else %}T?o t�i kho?n{% endif %}
+        </button>
+        {% if edit_user and edit_user.profile.role != 'admin' %}
+        <button type="button" class="btn btn-warning" style="margin-left: auto;" 
+            onclick="resetPassword({{ edit_user.id }})">
+            <i class="fas fa-key"></i> Reset m?t kh?u
+        </button>
+        {% endif %}
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function resetPassword(userId) {
+    if (confirm('Reset m?t kh?u v? m?c d?nh (s? CCCD)?')) {
+        fetch(`/users/${userId}/reset-password/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken':  '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(data.message, 'success');
+            } else {
+                showAlert(data.message || 'C� l?i x?y ra', 'error');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Trang ch? - Ngu?i d�n{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Xin ch�o, {{ user.ho_ten }}!  ??</h2>
+    <p>Ch�o m?ng b?n d?n v?i H? th?ng Qu?n l� T? D�n Ph? di?n t?</p>
+</div>
+
+<!-- Th�ng tin cu tr� -->
+<div class="card" style="margin-bottom: 25px;">
+    <div class="card-header">
+        <h3><i class="fas fa-id-card"></i> Th�ng tin cu tr�</h3>
+        <span class="status-badge status-active">Thu?ng tr�</span>
+    </div>
+    <div class="card-body">
+        <div class="detail-grid">
+            <div class="detail-item">
+                <label>H? v� t�n</label>
+                <p>{{ user.ho_ten }}</p>
+            </div>
+            <div class="detail-item">
+                <label>S? CCCD</label>
+                <p>{{ user.cccd }}</p>
+            </div>
+            <div class="detail-item">
+                <label>�?a ch? thu?ng tr�</label>
+                <p>{{ user.dia_chi_thuong_tru|default:"Chua c?p nh?t" }}</p>
+            </div>
+            <div class="detail-item">
+                <label>S? s? h? kh?u</label>
+                <p>{{ user.so_ho_khau|default:"Chua c?p nh?t" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<h3 style="margin-bottom: 15px; color: var(--text-dark);">D?ch v? c�ng</h3>
+<div class="quick-actions">
+    <a href="{% url 'nhankhau_form' %}" class="action-item">
+        <div class="action-icon" style="background: var(--gradient-primary);">
+            <i class="fas fa-user-plus"></i>
+        </div>
+        <span>Khai báo nhân kh?u</span>
+    </a>
+    
+    <a href="{% url 'hokhau_form' %}" class="action-item">
+        <div class="action-icon" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%);">
+            <i class="fas fa-house-user"></i>
+        </div>
+        <span>�ang k� h? kh?u</span>
+    </a>
+    
+    <a href="{% url 'tamtru_create' %}" class="action-item">
+        <div class="action-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">
+            <i class="fas fa-suitcase"></i>
+        </div>
+        <span>Khai b�o t?m tr�</span>
+    </a>
+    
+    <a href="{% url 'tamvang_create' %}" class="action-item">
+        <div class="action-icon" style="background:  linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);">
+            <i class="fas fa-plane-departure"></i>
+        </div>
+        <span>Khai b�o t?m v?ng</span>
+    </a>
+</div>
+
+<div class="row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <!-- H? so d� g?i -->
+    <div class="card">
+        <div class="card-header light">
+            <h3><i class="fas fa-folder-open"></i> H? so c?a t�i</h3>
+            <a href="{% url 'hoso_list' %}" class="btn btn-sm btn-outline">Xem t?t c?</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if ho_so_list %}
+                <ul class="notification-list">
+                    {% for hoso in ho_so_list %}
+                    <li class="notification-item">
+                        <div class="notification-icon" style="background: 
+                            {% if hoso.trang_thai == 'CHO_DUYET' %}var(--warning-color)
+                            {% elif hoso.trang_thai == 'DA_DUYET' %}var(--success-color)
+                            {% else %}var(--danger-color){% endif %};">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="notification-content">
+                            <h4>{{ hoso.loai_ho_so }}</h4>
+                            <p>M� h? so:  {{ hoso.ma_ho_so }}</p>
+                        </div>
+                        <span class="status-badge 
+                            {% if hoso.trang_thai == 'CHO_DUYET' %}status-pending
+                            {% elif hoso.trang_thai == 'DA_DUYET' %}status-approved
+                            {% else %}status-rejected{% endif %}">
+                            {{ hoso.get_trang_thai_display }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="empty-state" style="padding: 40px;">
+                    <i class="fas fa-folder-open"></i>
+                    <h3>Chua c� h? so</h3>
+                    <p>B?n chua g?i h? so n�o</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Th�ng b�o -->
+    <div class="card">
+        <div class="card-header light">
+            <h3><i class="fas fa-bell"></i> Th�ng b�o m?i</h3>
+            <a href="{% url 'thongbao_list' %}" class="btn btn-sm btn-outline">Xem t?t c?</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if thong_bao_list %}
+                <ul class="notification-list">
+                    {% for tb in thong_bao_list %}
+                    <li class="notification-item {% if not tb.da_doc %}unread{% endif %}">
+                        <div class="notification-icon" style="background: 
+                            {% if tb.loai == 'QUAN_TRONG' %}var(--danger-color)
+                            {% elif tb.loai == 'THONG_BAO' %}var(--primary-color)
+                            {% else %}var(--info-color){% endif %};">
+                            <i class="fas {% if tb.loai == 'QUAN_TRONG' %}fa-exclamation{% else %}fa-bell{% endif %}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <h4>{{ tb.tieu_de }}</h4>
+                            <p>{{ tb.ngay_tao|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        {% if not tb.da_doc %}
+                        <span class="badge-new">M?i</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="empty-state" style="padding: 40px;">
+                    <i class="fas fa-bell-slash"></i>
+                    <h3>Kh�ng c� th�ng b�o</h3>
+                    <p>B?n chua c� th�ng b�o n�o</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Khen thu?ng g?n d�y -->
+<div class="card" style="margin-top: 25px;">
+    <div class="card-header light">
+        <h3><i class="fas fa-award"></i> Khen thu?ng c?a t�i</h3>
+        <a href="{% url 'khenthuong_list' %}" class="btn btn-sm btn-outline">Xem t?t c?</a>
+    </div>
+    <div class="card-body">
+        {% if khen_thuong_list %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Ng�y</th>
+                        <th>H�nh th?c</th>
+                        <th>L� do</th>
+                        <th>Ghi ch�</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for kt in khen_thuong_list %}
+                    <tr>
+                        <td>{{ kt.ngay_khen_thuong|date:"d/m/Y" }}</td>
+                        <td>
+                            <span class="status-badge" style="background: #fef3c7; color: #d97706;">
+                                <i class="fas fa-medal"></i> {{ kt.get_hinh_thuc_display }}
+                            </span>
+                        </td>
+                        <td>{{ kt.ly_do }}</td>
+                        <td>{{ kt.ghi_chu|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-award" style="color: #fbbf24;"></i>
+            <h3>Chua c� khen thu?ng</h3>
+            <p>B?n chua nh?n du?c khen thu?ng n�o</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Hu?ng d?n s? d?ng -->
+<div class="card" style="margin-top: 25px;">
+    <div class="card-header light">
+        <h3><i class="fas fa-question-circle"></i> Hu?ng d?n s? d?ng</h3>
+    </div>
+    <div class="card-body">
+        <div class="guide-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+            <div class="guide-item" style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 12px;">
+                <div style="width: 60px; height: 60px; background: var(--gradient-primary); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                    <i class="fas fa-user-edit" style="color: white; font-size: 24px;"></i>
+                </div>
+                <h4 style="margin-bottom: 8px;">C?p nh?t th�ng tin</h4>
+                <p style="color: var(--text-light); font-size: 14px;">C?p nh?t th�ng tin c� nh�n, d?a ch? cu tr� c?a b?n</p>
+            </div>
+            <div class="guide-item" style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 12px;">
+                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #10b981 0%, #34d399 100%); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                    <i class="fas fa-file-signature" style="color: white; font-size: 24px;"></i>
+                </div>
+                <h4 style="margin-bottom: 8px;">N?p h? so</h4>
+                <p style="color: var(--text-light); font-size: 14px;">N?p c�c lo?i h? so dang k� t?m tr�, t?m v?ng tr?c tuy?n</p>
+            </div>
+            <div class="guide-item" style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 12px;">
+                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                    <i class="fas fa-search" style="color: white; font-size: 24px;"></i>
+                </div>
+                <h4 style="margin-bottom: 8px;">Tra c?u h? so</h4>
+                <p style="color: var(--text-light); font-size: 14px;">Theo d�i ti?n d? x? l� h? so d� n?p</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Li�n h? h? tr? -->
+<div class="card" style="margin-top: 25px; background: var(--gradient-primary); color: white;">
+    <div class="card-body" style="display: flex; align-items: center; justify-content: space-between; padding: 25px 30px;">
+        <div>
+            <h3 style="color: white; margin-bottom: 8px;"><i class="fas fa-headset"></i> C?n h? tr??</h3>
+            <p style="opacity: 0.9; margin: 0;">Li�n h? v?i c�n b? t? d�n ph? qua hotline ho?c tr?c ti?p t?i tr? s?</p>
+        </div>
+        <div style="display: flex; gap: 15px;">
+            <a href="tel:0123456789" class="btn" style="background: white; color: var(--primary-color);">
+                <i class="fas fa-phone"></i> 0123 456 789
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
