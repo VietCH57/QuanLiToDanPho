@@ -23,11 +23,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+<<<<<<< HEAD:quanlyTDP/quanlyTDP/settings.py
+    'core',
+=======
     
     # Local apps
     'apps.users',
     'apps.core',
     'apps.api',
+>>>>>>> main:citizen_app/settings.py
 ]
 
 
@@ -91,6 +95,9 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+<<<<<<< HEAD:quanlyTDP/quanlyTDP/settings.py
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+=======
 
 
 # Authentication settings
@@ -131,3 +138,4 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'citizen_app.wsgi.application'
+>>>>>>> main:citizen_app/settings.py

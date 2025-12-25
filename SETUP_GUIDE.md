@@ -1,5 +1,25 @@
 # Hệ thống Quản lý Tổ Dân Phố - Hướng dẫn chạy Demo
+## 🎯 Quick Start (TL;DR)
 
+```bash
+# 1. Tạo và kích hoạt venv
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+
+# 2. Cài đặt
+pip install django
+
+# 3. Setup database và user
+python manage.py makemigrations
+python manage.py migrate
+Get-Content create_demo_users.py | python manage.py shell
+
+# 4. Chạy
+python manage.py runserver
+
+# 5. Truy cập http://127.0.0.1:8000/
+# Login với: admin/admin123 hoặc citizen/citizen123
+```
 ## 🚀 Chạy Demo nhanh (SQLite - Không cần MySQL)
 
 ### Bước 1: Tạo và kích hoạt Virtual Environment
@@ -166,24 +186,3 @@ Hệ thống sử dụng role-based access control:
 
 ---
 
-## 🎯 Quick Start (TL;DR)
-
-```bash
-# 1. Tạo và kích hoạt venv
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-
-# 2. Cài đặt
-pip install django
-
-# 3. Setup database và user
-python manage.py makemigrations
-python manage.py migrate
-Get-Content create_demo_users.py | python manage.py shell
-
-# 4. Chạy
-python manage.py runserver
-
-# 5. Truy cập http://127.0.0.1:8000/
-# Login với: admin/admin123 hoặc citizen/citizen123
-```
