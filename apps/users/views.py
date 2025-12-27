@@ -5,12 +5,19 @@ from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 
 
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib import messages
+
 def login_view(request):
     """
     Xử lý đăng nhập người dùng
     """
+    # 1. Nếu đã đăng nhập -> Chuyển hướng sang Dashboard
     if request.user.is_authenticated:
-        return redirect('dashboard')
+        # SỬA: Phải là 'users' (số nhiều) và có dấu hai chấm
+        return redirect('users:dashboard') 
     
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
@@ -22,7 +29,10 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 messages.success(request, f'Chào mừng {username}!')
-                return redirect('dashboard')
+                
+                # 2. Đăng nhập thành công -> Chuyển hướng sang Dashboard
+                # SỬA: Thêm 'users:' vào trước
+                return redirect('users:dashboard')
             else:
                 messages.error(request, 'Tên đăng nhập hoặc mật khẩu không đúng')
         else:
@@ -40,7 +50,7 @@ def logout_view(request):
     """
     logout(request)
     messages.success(request, 'Đã đăng xuất thành công!')
-    return redirect('login')
+    return redirect('users:login')
 
 
 @login_required

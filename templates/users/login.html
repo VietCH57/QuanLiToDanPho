@@ -110,7 +110,7 @@
             <p>Hệ thống quản lý tổ dân phố</p>
         </div>
 
-        <form method="post" action="{% url 'login' %}">
+        <form method="post" action="{% url 'users:login' %}">
             {% csrf_token %}
             
             <div class="form-group">

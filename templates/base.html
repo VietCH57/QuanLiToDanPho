@@ -97,8 +97,8 @@
             <h1>🏘️ Quản lý Tổ Dân Phố</h1>
             <div class="user-info">
                 <span>Xin chào, <strong>{{ user.username }}</strong></span>
-                <a href="{% url 'dashboard' %}">Dashboard</a>
-                <a href="{% url 'logout' %}">Đăng xuất</a>
+                <a href="{% url 'users:dashboard' %}">Dashboard</a>
+                <a href="{% url 'users:logout' %}">Đăng xuất</a>
             </div>
         </nav>
         {% endif %}
