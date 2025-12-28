@@ -208,12 +208,31 @@
 
         <div class="actions">
             {% if role_class == 'manager' %}
-                <a href="#" class="btn btn-primary">Quản lý công dân</a>
-                <a href="#" class="btn btn-primary">Báo cáo</a>
+                <a href="/api/ho-gia-dinh/" class="btn btn-primary" target="_blank">
+                    📋 Quản lý Cư Dân (API)
+                </a>
+
+                <a href="/api/lich-su-phan-thuong/" class="btn btn-primary" target="_blank">
+                    🏆 Quản lý Khen Thưởng (API)
+                </a>
+
+                <a href="/api/dashboard/" class="btn btn-primary" target="_blank">
+                    📊 Xem Báo Cáo (API)
+                </a>
+
+                <a href="/admin/" class="btn btn-secondary" target="_blank">
+                    ⚙️ Trang Admin
+                </a>
+
             {% else %}
-                <a href="#" class="btn btn-secondary">Xem thông tin cá nhân</a>
+                <a href="/api/me/" class="btn btn-secondary" target="_blank">
+                    👤 Xem Profile của tôi (API)
+                </a>
             {% endif %}
-            <a href="{% url 'users:logout' %}" class="btn btn-secondary">Đăng xuất</a>
+
+            <a href="{% url 'users:logout' %}" class="btn btn-secondary" style="background-color: #ff6b6b; color: white; border: none;">
+                🚪 Đăng xuất
+            </a>
         </div>
     </div>
 </div>

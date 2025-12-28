@@ -28,7 +28,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
+    'corsheaders',
+
     'rest_framework',
+
+    'django_filters',
+    'drf_yasg',
+
     # Local apps
     'apps.users',
     'apps.core',
@@ -115,6 +121,7 @@ LOGOUT_REDIRECT_URL = 'users:login'
 
 # Middleware
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -145,3 +152,22 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'citizen_app.wsgi.application'
+
+# Cho phép mọi nguồn truy cập (Chỉ dùng cho môi trường Dev)
+CORS_ALLOW_ALL_ORIGINS = True
+
+# Cấu hình cho Django REST Framework
+REST_FRAMEWORK = {
+    # 1. Cấu hình Filter (Bộ lọc) mặc định
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ],
+    
+    # 2. Cấu hình Phân trang (Pagination)
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,  # Mỗi trang hiển thị 10 kết quả (Frontend tự chia trang 1, 2, 3...)
+
+    # 3. Cấu hình Format ngày tháng (Để Frontend dễ đọc)
+    'DATE_FORMAT': '%d-%m-%Y',        # Ngày sinh hiển thị dạng: 28-12-2025
+    'DATETIME_FORMAT': '%d-%m-%Y %H:%M:%S',
+}

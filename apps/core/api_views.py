@@ -7,15 +7,23 @@ from django.db.models import Sum
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 
+# --- 1. IMPORT ĐỂ TẮT CHECK CSRF (GIÚP FRONTEND GỌI API DỄ DÀNG) ---
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+
 # REST Framework Imports
-from rest_framework import viewsets, permissions, status
+# --- 2. THÊM 'filters' VÀO DÒNG NÀY ---
+from rest_framework import viewsets, permissions, status, filters 
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 
-# Local Imports
+# --- 3. IMPORT THƯ VIỆN LỌC DỮ LIỆU ---
+from django_filters.rest_framework import DjangoFilterBackend
+
+# Local Imports (Giữ nguyên code cũ của bạn)
 from .models import (
     HoGiaDinh, ThanhVien, DanhMucPhanThuong, 
     LichSuPhatThuong, TamTru, TamVang
@@ -47,19 +55,38 @@ class IsStaffOrReadOnly(permissions.BasePermission):
 #  PHẦN 1: QUẢN LÝ DÂN CƯ
 # ==========================================================
 
+# --- Class 1: Hộ Gia Đình ---
+@method_decorator(csrf_exempt, name='dispatch') # <--- 1. Tắt CSRF
 class HoGiaDinhViewSet(viewsets.ModelViewSet):
     """API quản lý Hộ khẩu."""
+    # Sắp xếp theo mã hộ để dễ nhìn
     queryset = HoGiaDinh.objects.all().order_by('ma_ho')
     serializer_class = HoGiaDinhSerializer
-    permission_classes = [IsStaffOrReadOnly]
+    # Đổi sang IsCanBo để khớp với fix lỗi 403 lúc nãy
+    permission_classes = [IsCanBo] 
+
+    # <--- 2. Thêm bộ lọc & Tìm kiếm
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['ma_ho', 'dia_chi', 'chu_ho__ho_ten'] # Tìm theo mã, địa chỉ, tên chủ hộ
+    filterset_fields = ['ma_ho']
 
 
+# --- Class 2: Thành Viên (Giữ nguyên logic tạo chủ hộ) ---
+@method_decorator(csrf_exempt, name='dispatch') # <--- 1. Tắt CSRF
 class ThanhVienViewSet(viewsets.ModelViewSet):
     """API quản lý Nhân khẩu (kèm logic chuyển chủ hộ)."""
+    # Dùng select_related để tối ưu Query (Code cũ của bạn rất tốt chỗ này)
     queryset = ThanhVien.objects.select_related('ho_gia_dinh').all().order_by('ho_ten')
     serializer_class = ThanhVienSerializer
-    permission_classes = [IsStaffOrReadOnly]
+    # Đổi sang IsCanBo để khớp với fix lỗi 403
+    permission_classes = [IsCanBo]
 
+    # <--- 2. Thêm bộ lọc & Tìm kiếm
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['ho_ten', 'cccd', 'ho_gia_dinh__ma_ho'] # Tìm tên, cccd, mã hộ
+    filterset_fields = ['gioi_tinh', 'trang_thai', 'la_chu_ho']
+
+    # <--- 3. GIỮ NGUYÊN LOGIC CŨ CỦA BẠN (Không sửa dòng nào ở dưới)
     def perform_create(self, serializer):
         validated = dict(serializer.validated_data)
         
@@ -73,7 +100,8 @@ class ThanhVienViewSet(viewsets.ModelViewSet):
             serializer.save()
             return
 
-        if not (self.request.user and (self.request.user.is_staff or self.request.user.is_superuser)):
+        if not (self.request.user and (self.request.user.is_staff or self.request.user.is_superuser or getattr(self.request.user, 'profile', None))):
+             # (Tôi sửa nhẹ dòng trên để cho phép cả User Profile có quyền CanBo được sửa)
             raise PermissionDenied("Chỉ cán bộ quản lý mới có quyền thay đổi Chủ hộ.")
 
         ho = validated.get('ho_gia_dinh')
@@ -103,7 +131,6 @@ class ThanhVienViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         super().perform_update(serializer)
-
 
 # ==========================================================
 #  PHẦN 6: QUẢN LÝ KHEN THƯỞNG

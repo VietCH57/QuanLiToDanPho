@@ -24,23 +24,25 @@ class IsNguoiDan(BasePermission):
 
 class IsCanBo(BasePermission):
     """
-    Quyền truy cập: Dành cho Cán bộ chức năng và Lãnh đạo tổ.
-    - Bao gồm: Cán bộ nhân khẩu, Cán bộ hành chính, Tổ trưởng, Tổ phó.
-    - Thường dùng cho API xử lý nghiệp vụ, duyệt đơn, xem báo cáo.
+    Quyền truy cập: Dành cho Cán bộ (Admin, Quản lý công dân, Quản lý khen thưởng).
     """
     def has_permission(self, request, view):
+        # 1. Phải đăng nhập
         if not (request.user and request.user.is_authenticated):
             return False
+            
+        # 2. Admin hệ thống (Superuser) luôn được phép
+        # (Thêm dòng này để tài khoản 'admin' gốc không bao giờ bị chặn)
+        if request.user.is_superuser:
+            return True
 
-        # Danh sách các vai trò được coi là "Cán bộ"
+        # 3. Check các vai trò cán bộ hợp lệ (Theo Database mới)
         ALLOWED_ROLES = [
-            'CAN_BO_NHAN_KHAU',
-            'CAN_BO_HANH_CHINH',
-            'TO_TRUONG',
-            'TO_PHO',
-            'CAN_BO' # (Giữ lại để tương thích với dữ liệu cũ nếu có)
+            'admin', 
+            'citizenship_manager', 
+            'commendation_manager'
         ]
-
+        
         return (
             hasattr(request.user, 'profile') 
             and request.user.profile.role in ALLOWED_ROLES
