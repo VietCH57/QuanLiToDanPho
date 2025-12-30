@@ -771,3 +771,19 @@ def admin_xoa_nhan_khau(request, pk):
         messages.success(request, 'Đã xoá nhân khẩu!')
         return redirect('users:nhan_khau')
     return render(request, 'users/admin_xoa_nhan_khau.html', {'thanh_vien': thanh_vien})
+
+@login_required
+def admin_them_ho_khau(request):
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    from apps.core.models import HoGiaDinh
+    if request.method == 'POST':
+        ma_ho = request.POST.get('ma_ho')
+        dia_chi = request.POST.get('dia_chi')
+        if not ma_ho or not dia_chi:
+            messages.error(request, 'Vui lòng nhập đầy đủ thông tin!')
+        else:
+            HoGiaDinh.objects.create(ma_ho=ma_ho, dia_chi=dia_chi)
+            messages.success(request, 'Đã thêm hộ khẩu mới!')
+            return redirect('users:ho_khau')
+    return render(request, 'users/admin_them_ho_khau.html')

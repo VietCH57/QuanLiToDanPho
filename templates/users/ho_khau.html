@@ -162,97 +162,330 @@
     .no-data p {
         color: #999;
     }
+
+    /* Admin styles */
+    .admin-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .admin-header h2 {
+        margin: 0;
+        font-size: 28px;
+        color: #333;
+    }
+
+    .admin-header .btn {
+        padding: 10px 20px;
+        background: #4CAF50;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: 600;
+    }
+
+    .admin-header .btn:hover {
+        background: #45a049;
+    }
+
+    .stats-box {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+
+    .stat-item {
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 10px;
+        flex: 1;
+        margin-right: 10px;
+        position: relative;
+    }
+
+    .stat-item:last-child {
+        margin-right: 0;
+    }
+
+    .stat-item .icon {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        font-size: 30px;
+        color: #EC4899;
+    }
+
+    .stat-item .content {
+        margin-left: 50px;
+    }
+
+    .stat-item .number {
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .stat-item .label {
+        font-size: 14px;
+        color: #666;
+    }
+
+    .search-box {
+        margin-bottom: 30px;
+    }
+
+    .search-box input {
+        width: calc(100% - 100px);
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+    .search-box button {
+        padding: 10px 20px;
+        background: #EC4899;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .search-box button:hover {
+        background: #d63277;
+    }
+
+    .ho-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .ho-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .ho-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .ho-card-header .title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .ho-card-header .chu-ho {
+        font-size: 14px;
+        color: #666;
+    }
+
+    .ho-card-header .badge {
+        background: #EC4899;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .ho-info {
+        margin-bottom: 15px;
+    }
+
+    .ho-info-item {
+        margin-bottom: 10px;
+    }
+
+    .ho-info-item .label {
+        font-size: 14px;
+        color: #666;
+        margin-right: 5px;
+    }
+
+    .ho-info-item .value {
+        font-size: 14px;
+        color: #333;
+    }
+
+    .members-preview {
+        margin-top: 10px;
+    }
+
+    .members-preview .title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .member-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .member-tag {
+        background: #E5E7EB;
+        color: #333;
+        padding: 5px 10px;
+        border-radius: 12px;
+        font-size: 13px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state .icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+        color: #666;
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        color: #999;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+{% if is_manager %}
+<div class="admin-container">
+    <div class="admin-header">
+        <div>
+            <h2>🏠 Quản lý Hộ khẩu</h2>
+            <p style="margin: 5px 0 0 0; opacity: 0.9;">Danh sách tất cả hộ gia đình trong tổ dân phố</p>
+        </div>
+        <div>
+            <a href="{% url 'users:admin_them_ho_khau' %}" class="btn btn-success">+ Thêm hộ khẩu mới</a>
+        </div>
+    </div>
+    <div class="stats-box">
+        <div class="stat-item">
+            <div class="icon">🏠</div>
+            <div class="content">
+                <div class="number">{{ tong_so_ho }}</div>
+                <div class="label">Tổng số hộ</div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="icon">👥</div>
+            <div class="content">
+                <div class="number">{{ tong_nhan_khau }}</div>
+                <div class="label">Tổng nhân khẩu thường trú</div>
+            </div>
+        </div>
+    </div>
+    <div class="search-box">
+        <form method="get">
+            <input type="text" name="search" placeholder="Tìm kiếm theo mã hộ, chủ hộ, địa chỉ..." value="{{ search }}">
+            <button type="submit">🔍 Tìm kiếm</button>
+        </form>
+    </div>
+    {% if danh_sach_ho %}
+    <div class="ho-list">
+        {% for ho in danh_sach_ho %}
+        <div class="ho-card">
+            <div class="ho-card-header">
+                <div>
+                    <div class="title">📖 Hộ {{ ho.ma_ho }}</div>
+                    <div class="chu-ho">👤 Chủ hộ: {{ ho.chu_ho.ho_ten }}</div>
+                </div>
+                <div class="badge">{{ ho.thanh_vien_trong_ho.count }} thành viên</div>
+            </div>
+            <div class="ho-info">
+                <div class="ho-info-item">
+                    <span class="label">Địa chỉ</span>
+                    <span class="value">{{ ho.dia_chi }}</span>
+                </div>
+                <div class="ho-info-item">
+                    <span class="label">Số CCCD chủ hộ</span>
+                    <span class="value">{{ ho.chu_ho.cccd|default:"Chưa cập nhật" }}</span>
+                </div>
+            </div>
+            {% if ho.thanh_vien_trong_ho.all %}
+            <div class="members-preview">
+                <div class="title">Thành viên trong hộ:</div>
+                <div class="member-tags">
+                    {% for tv in ho.thanh_vien_trong_ho.all %}
+                    <span class="member-tag">{{ tv.ho_ten }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">📭</div>
+        <h3>Không tìm thấy hộ khẩu</h3>
+        <p>{% if search %}Không có kết quả cho từ khóa "{{ search }}"{% else %}Chưa có hộ khẩu nào trong hệ thống.{% endif %}</p>
+    </div>
+    {% endif %}
+    <div style="text-align: center;">
+        <a href="{% url 'users:dashboard' %}" class="btn-back">← Quay lại Trang chủ</a>
+    </div>
+</div>
+{% else %}
 <div class="ho-khau-container">
     <div class="ho-khau-card">
         <div class="ho-khau-header">
-            <h2>📖 Sổ Hộ Khẩu</h2>
-            <p style="color: #666;">Thông tin hộ gia đình của bạn</p>
+            <h2>Sổ Hộ Khẩu</h2>
         </div>
-
         {% if ho_gia_dinh %}
-            <!-- Thông tin chung của hộ -->
-            <div class="info-box">
-                <h3 style="margin: 0 0 10px 0; color: #EC4899;">Thông tin chung</h3>
-                <div class="row">
-                    <div class="info-item">
-                        <span class="label">Mã số hộ khẩu</span>
-                        <span class="value">{{ ho_gia_dinh.ma_ho }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">Họ tên chủ hộ</span>
-                        <span class="value">{{ ho_gia_dinh.chu_ho.ho_ten }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">Số thành viên</span>
-                        <span class="value">{{ thanh_vien_trong_ho|length }} người</span>
-                    </div>
-                </div>
-                <div class="row" style="margin-top: 10px;">
-                    <div class="info-item" style="grid-column: 1 / -1;">
-                        <span class="label">Địa chỉ</span>
-                        <span class="value">{{ ho_gia_dinh.dia_chi }}</span>
-                    </div>
-                </div>
+        <div class="section-title">Thông tin hộ khẩu</div>
+        <div class="info-box">
+            <div class="row">
+                <div class="info-item"><span class="info-label">Mã hộ:</span> {{ ho_gia_dinh.ma_ho }}</div>
+                <div class="info-item"><span class="info-label">Chủ hộ:</span> {{ ho_gia_dinh.chu_ho.ho_ten }}</div>
+                <div class="info-item"><span class="info-label">Số CCCD chủ hộ:</span> {{ ho_gia_dinh.chu_ho.cccd|default:"Chưa cập nhật" }}</div>
+                <div class="info-item"><span class="info-label">Địa chỉ:</span> {{ ho_gia_dinh.dia_chi }}</div>
             </div>
-
-            <!-- Danh sách thành viên -->
-            <div class="section-title">
-                <span>👥</span>
-                <span>Danh sách thành viên trong hộ</span>
-            </div>
-            
-            <table class="members-table">
-                <thead>
-                    <tr>
-                        <th>Họ và tên</th>
-                        <th>Ngày sinh</th>
-                        <th>Giới tính</th>
-                        <th>Quan hệ với chủ hộ</th>
-                        <th>Số CCCD</th>
-                        <th>Nghề nghiệp</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for tv in thanh_vien_trong_ho %}
-                    <tr {% if tv.la_chu_ho %}class="chu-ho"{% endif %}>
-                        <td>
-                            {{ tv.ho_ten }}
-                            {% if tv.la_chu_ho %}
-                            <span class="badge chu-ho">Chủ hộ</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ tv.ngay_sinh|date:"d/m/Y" }}</td>
-                        <td>{{ tv.get_gioi_tinh_display|default:"-" }}</td>
-                        <td>{{ tv.quan_he_chu_ho|default:"Thành viên" }}</td>
-                        <td>{{ tv.cccd|default:"Chưa cập nhật" }}</td>
-                        <td>{{ tv.nghe_nghiep|default:"-" }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            {% if thanh_vien_trong_ho|length == 0 %}
-            <div class="no-data">
-                <div class="icon">📭</div>
-                <h3>Chưa có thành viên nào trong hộ</h3>
-            </div>
-            {% endif %}
-
-        {% else %}
-            <div class="no-data">
-                <div class="icon">❌</div>
-                <h3>Không tìm thấy thông tin hộ khẩu</h3>
-                <p>Số CCCD của bạn chưa được liên kết với hộ khẩu nào. Vui lòng liên hệ tổ trưởng để cập nhật thông tin.</p>
-            </div>
-        {% endif %}
-
-        <div style="text-align: center;">
-            <a href="{% url 'users:dashboard' %}" class="btn-back">← Quay lại Trang chủ</a>
         </div>
+        <div class="section-title">Thành viên trong hộ</div>
+        <div class="info-box">
+            <div class="row">
+                {% for tv in thanh_vien_trong_ho %}
+                <div class="info-item">
+                    <span class="info-label">{{ tv.ho_ten }}{% if tv.la_chu_ho %} (Chủ hộ){% endif %}</span><br>
+                    <span class="info-label">Ngày sinh:</span> {{ tv.ngay_sinh|date:"d/m/Y" }}<br>
+                    <span class="info-label">Giới tính:</span> {{ tv.get_gioi_tinh_display|default:"-" }}<br>
+                    <span class="info-label">Số CCCD:</span> {{ tv.cccd|default:"Chưa có" }}<br>
+                    <span class="info-label">Quan hệ chủ hộ:</span> {{ tv.quan_he_chu_ho|default:"-" }}<br>
+                    <span class="info-label">Trạng thái:</span> {{ tv.trang_thai }}<br>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon">📭</div>
+            <h3>Không tìm thấy thông tin hộ khẩu</h3>
+        </div>
+        {% endif %}
     </div>
 </div>
+{% endif %}
 {% endblock %}

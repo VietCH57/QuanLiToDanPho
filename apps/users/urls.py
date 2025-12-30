@@ -29,4 +29,5 @@ urlpatterns = [
     path('admin/nhan-khau/thong-ke/', views.admin_thong_ke_nhan_khau, name='admin_thong_ke_nhan_khau'),
     # Admin tách hộ
     path('admin/ho-khau/tach/<int:ho_id>/', views.admin_tach_ho, name='admin_tach_ho'),
+    path('admin/ho-khau/them/', views.admin_them_ho_khau, name='admin_them_ho_khau'),
 ]
