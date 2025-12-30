@@ -730,7 +730,30 @@ from django import forms
 class ThanhVienForm(forms.ModelForm):
     class Meta:
         model = ThanhVien
-        fields = ['ho_gia_dinh', 'ho_ten', 'bi_danh', 'cccd', 'ngay_sinh', 'noi_sinh', 'nguyen_quan', 'dan_toc', 'gioi_tinh', 'nghe_nghiep', 'noi_lam_viec', 'ngay_cap_cccd', 'noi_cap_cccd', 'ngay_dang_ky_thuong_tru', 'dia_chi_truoc_chuyen_den', 'la_chu_ho', 'quan_he_chu_ho', 'trang_thai']
+        fields = ['ho_gia_dinh', 'ho_ten', 'bi_danh', 'cccd', 'ngay_sinh', 'noi_sinh', 
+                  'nguyen_quan', 'dan_toc', 'gioi_tinh', 'nghe_nghiep', 'noi_lam_viec', 
+                  'ngay_cap_cccd', 'noi_cap_cccd', 'ngay_dang_ky_thuong_tru', 
+                  'dia_chi_truoc_chuyen_den', 'la_chu_ho', 'quan_he_chu_ho', 'trang_thai']
+        widgets = {
+            'ngay_sinh': forms.DateInput(attrs={'type': 'date'}),
+            'ngay_cap_cccd': forms.DateInput(attrs={'type': 'date'}),
+            'ngay_dang_ky_thuong_tru': forms.DateInput(attrs={'type': 'date'}),
+            'ho_gia_dinh': forms.Select(attrs={'class': 'form-control'}),
+            'ho_ten': forms.TextInput(attrs={'class': 'form-control'}),
+            'bi_danh': forms.TextInput(attrs={'class': 'form-control'}),
+            'cccd': forms.TextInput(attrs={'class': 'form-control', 'maxlength': '12'}),
+            'noi_sinh': forms.TextInput(attrs={'class': 'form-control'}),
+            'nguyen_quan': forms.TextInput(attrs={'class': 'form-control'}),
+            'dan_toc': forms.TextInput(attrs={'class': 'form-control'}),
+            'gioi_tinh': forms.Select(attrs={'class': 'form-control'}),
+            'nghe_nghiep': forms.TextInput(attrs={'class': 'form-control'}),
+            'noi_lam_viec': forms.TextInput(attrs={'class': 'form-control'}),
+            'noi_cap_cccd': forms.TextInput(attrs={'class': 'form-control'}),
+            'dia_chi_truoc_chuyen_den': forms.TextInput(attrs={'class': 'form-control'}),
+            'quan_he_chu_ho': forms.TextInput(attrs={'class': 'form-control'}),
+            'trang_thai': forms.Select(attrs={'class': 'form-control'}),
+            'la_chu_ho': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
 
 @login_required
 def admin_them_nhan_khau(request):

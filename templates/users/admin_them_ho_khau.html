@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Thêm Hộ khẩu mới - Hệ thống Quản lý Tổ Dân Phố{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 60px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #EC4899;
+    }
+
+    .form-header h2 {
+        color: #EC4899;
+        margin-bottom: 10px;
+        font-size: 28px;
+    }
+
+    .form-header p {
+        color: #666;
+        margin: 0;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+
+    .form-group label .required {
+        color: #EF4444;
+        font-weight: 700;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: border-color 0.3s;
+        box-sizing: border-box;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #EC4899;
+        box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+    }
+
+    .help-text {
+        font-size: 13px;
+        color: #999;
+        margin-top: 5px;
+        display: block;
+    }
+
+    .info-box {
+        background: #FEF3C7;
+        border-left: 4px solid #F59E0B;
+        padding: 15px 20px;
+        margin-bottom: 30px;
+        border-radius: 8px;
+    }
+
+    .info-box p {
+        margin: 0;
+        color: #92400E;
+        font-size: 14px;
+    }
+
+    .btn-container {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 40px;
+    }
+
+    .btn {
+        padding: 14px 40px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s;
+        cursor: pointer;
+        border: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+    }
+
+    .btn-secondary {
+        background: #e0e0e0;
+        color: #666;
+    }
+
+    .btn-secondary:hover {
+        background: #d0d0d0;
+    }
+
+    .form-icon {
+        font-size: 60px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .example-box {
+        background: #F0F9FF;
+        border-left: 4px solid #3B82F6;
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        border-radius: 8px;
+    }
+
+    .example-box .title {
+        font-weight: 600;
+        color: #1E3A8A;
+        margin-bottom: 8px;
+    }
+
+    .example-box .examples {
+        color: #1E40AF;
+        font-size: 14px;
+    }
+
+    .messages {
+        margin-bottom: 25px;
+    }
+
+    .alert {
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .alert-error {
+        background: #FEE2E2;
+        color: #991B1B;
+        border-left: 4px solid #EF4444;
+    }
+
+    .alert-success {
+        background: #D1FAE5;
+        color: #065F46;
+        border-left: 4px solid #10B981;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-icon">🏠</div>
+    <div class="form-header">
+        <h2>Thêm Hộ khẩu mới</h2>
+        <p>Tạo sổ hộ khẩu mới trong hệ thống</p>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {% if message.tags == 'error' %}❌{% else %}✓{% endif %}
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="info-box">
+        <p>💡 <strong>Lưu ý:</strong> Sau khi tạo hộ, bạn có thể thêm các thành viên vào hộ này ở trang "Quản lý Nhân khẩu".</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="ma_ho">Mã hộ khẩu <span class="required">*</span></label>
+            <input 
+                type="text" 
+                id="ma_ho" 
+                name="ma_ho" 
+                required 
+                placeholder="Nhập mã hộ"
+                maxlength="10"
+            >
+            <span class="help-text">Mã định danh duy nhất cho hộ này (tối đa 10 ký tự)</span>
+        </div>
+
+        <div class="example-box">
+            <div class="title">📝 Ví dụ về mã hộ:</div>
+            <div class="examples">HK001, HK002, HK123, HGD001, v.v.</div>
+        </div>
+
+        <div class="form-group">
+            <label for="dia_chi">Địa chỉ hộ khẩu <span class="required">*</span></label>
+            <input 
+                type="text" 
+                id="dia_chi" 
+                name="dia_chi" 
+                required 
+                placeholder="Nhập địa chỉ đầy đủ"
+            >
+            <span class="help-text">Số nhà, đường phố (ấp), phường (xã, thị trấn), quận (huyện)</span>
+        </div>
+
+        <div class="example-box">
+            <div class="title">📍 Ví dụ về địa chỉ:</div>
+            <div class="examples">123 Đường Lê Lợi, Phường Bến Thành, Quận 1, TP. HCM</div>
+        </div>
+
+        <div class="btn-container">
+            <button type="submit" class="btn btn-primary">✓ Tạo hộ khẩu</button>
+            <a href="{% url 'users:ho_khau' %}" class="btn btn-secondary">✕ Hủy bỏ</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

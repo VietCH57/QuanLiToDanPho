@@ -61,7 +61,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'QLToDanPho',
         'USER': 'root',
-        'PASSWORD': '123456',
+        'PASSWORD': 'mmm123456',
         'HOST': '127.0.0.1',
         'PORT': '3306',
         'OPTIONS': {

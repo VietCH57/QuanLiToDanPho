@@ -21,16 +21,29 @@ class ThanhVienSerializer(serializers.ModelSerializer):
     
     # Hiển thị thêm thông tin hộ (Optional)
     ten_ho_gia_dinh = serializers.CharField(source='ho_gia_dinh.ma_ho', read_only=True)
+    tuoi = serializers.SerializerMethodField()
 
     class Meta:
         model = ThanhVien
         fields = [
             'id', 'ho_gia_dinh', 'ten_ho_gia_dinh',
-            'ho_ten', 'cccd', 'ngay_sinh', 'gioi_tinh',
+            'ho_ten', 'bi_danh', 'cccd', 'ngay_sinh', 'tuoi', 
+            'noi_sinh', 'nguyen_quan', 'dan_toc', 'gioi_tinh',
+            'nghe_nghiep', 'noi_lam_viec',
+            'ngay_cap_cccd', 'noi_cap_cccd',
+            'ngay_dang_ky_thuong_tru', 'dia_chi_truoc_chuyen_den',
             'quan_he_chu_ho', 'la_chu_ho', 'trang_thai',
+            'ngay_chuyen_di', 'noi_chuyen_den', 'ghi_chu_thay_doi',
             'force_chu_ho', # Control field
         ]
-        read_only_fields = ['id']
+        read_only_fields = ['id', 'tuoi']
+    
+    def get_tuoi(self, obj):
+        from datetime import date
+        today = date.today()
+        return today.year - obj.ngay_sinh.year - (
+            (today.month, today.day) < (obj.ngay_sinh.month, obj.ngay_sinh.day)
+        )
 
 
 class HoGiaDinhSerializer(serializers.ModelSerializer):

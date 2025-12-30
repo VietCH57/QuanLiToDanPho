@@ -1,0 +1,347 @@
+{% extends 'base.html' %}
+
+{% block title %}Tách hộ - {{ ho.ma_ho }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .split-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 30px;
+    }
+
+    .split-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 30px;
+        background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);
+        color: white;
+        border-radius: 15px;
+    }
+
+    .split-header h2 {
+        margin: 0 0 10px 0;
+        font-size: 28px;
+    }
+
+    .info-card {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    .info-card h3 {
+        color: #EC4899;
+        margin-bottom: 20px;
+        font-size: 20px;
+    }
+
+    .info-row {
+        display: flex;
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-row .label {
+        font-weight: 600;
+        color: #666;
+        min-width: 180px;
+    }
+
+    .info-row .value {
+        color: #333;
+    }
+
+    .form-card {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    .form-card h3 {
+        color: #EC4899;
+        margin-bottom: 20px;
+        font-size: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: border-color 0.3s;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #EC4899;
+    }
+
+    .members-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+    .members-table thead {
+        background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);
+        color: white;
+    }
+
+    .members-table th {
+        padding: 15px 10px;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .members-table tbody tr {
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.2s;
+    }
+
+    .members-table tbody tr:hover {
+        background: #FCE7F3;
+    }
+
+    .members-table tbody tr.selected {
+        background: #FBCFE8;
+    }
+
+    .members-table td {
+        padding: 12px 10px;
+        color: #333;
+    }
+
+    .checkbox-cell {
+        width: 50px;
+        text-align: center;
+    }
+
+    .checkbox-cell input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge.chu-ho {
+        background: #EC4899;
+        color: white;
+    }
+
+    .warning-box {
+        background: #FEF3C7;
+        border-left: 4px solid #F59E0B;
+        padding: 15px 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+    }
+
+    .warning-box p {
+        margin: 0;
+        color: #92400E;
+    }
+
+    .btn-container {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+    }
+
+    .btn {
+        padding: 12px 30px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 15px;
+        transition: all 0.3s;
+        cursor: pointer;
+        border: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+    }
+
+    .btn-secondary {
+        background: #e0e0e0;
+        color: #666;
+    }
+
+    .btn-secondary:hover {
+        background: #d0d0d0;
+    }
+
+    .selected-count {
+        background: #FBCFE8;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: 600;
+        color: #831843;
+        margin: 15px 0;
+    }
+</style>
+
+<script>
+    function updateSelectedCount() {
+        const checkboxes = document.querySelectorAll('input[name="tach_ids"]:checked');
+        const count = checkboxes.length;
+        const countDisplay = document.getElementById('selected-count');
+        if (countDisplay) {
+            countDisplay.textContent = `Đã chọn ${count} thành viên`;
+        }
+        
+        // Highlight selected rows
+        document.querySelectorAll('.members-table tbody tr').forEach(row => {
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            if (checkbox && checkbox.checked) {
+                row.classList.add('selected');
+            } else {
+                row.classList.remove('selected');
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners to checkboxes
+        document.querySelectorAll('input[name="tach_ids"]').forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedCount);
+        });
+        
+        // Initialize count
+        updateSelectedCount();
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="split-container">
+    <div class="split-header">
+        <h2>🏠 Tách hộ khẩu</h2>
+        <p style="margin: 0; opacity: 0.9;">Tạo hộ mới từ các thành viên được chọn</p>
+    </div>
+
+    <!-- Thông tin hộ cũ -->
+    <div class="info-card">
+        <h3>📋 Thông tin Hộ hiện tại</h3>
+        <div class="info-row">
+            <span class="label">Mã hộ:</span>
+            <span class="value">{{ ho.ma_ho }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Địa chỉ:</span>
+            <span class="value">{{ ho.dia_chi }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Chủ hộ:</span>
+            <span class="value">{{ ho.chu_ho.ho_ten|default:"Chưa có" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Tổng số thành viên:</span>
+            <span class="value">{{ thanh_vien_trong_ho.count }} người</span>
+        </div>
+    </div>
+
+    <div class="warning-box">
+        <p>⚠️ <strong>Lưu ý:</strong> Hãy chọn các thành viên muốn tách sang hộ mới và điền đầy đủ thông tin hộ mới bên dưới.</p>
+    </div>
+
+    <!-- Form tách hộ -->
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Thông tin hộ mới -->
+        <div class="form-card">
+            <h3>🆕 Thông tin Hộ mới</h3>
+            <div class="form-group">
+                <label>Mã hộ mới <span style="color: #EF4444;">*</span></label>
+                <input type="text" name="ma_ho_moi" required placeholder="VD: HK999">
+            </div>
+            <div class="form-group">
+                <label>Địa chỉ mới <span style="color: #EF4444;">*</span></label>
+                <input type="text" name="dia_chi_moi" required placeholder="VD: 123 Đường ABC, Phường XYZ">
+            </div>
+        </div>
+
+        <!-- Danh sách thành viên -->
+        <div class="form-card">
+            <h3>👥 Chọn thành viên tách sang hộ mới</h3>
+            <div id="selected-count" class="selected-count">Đã chọn 0 thành viên</div>
+            
+            <table class="members-table">
+                <thead>
+                    <tr>
+                        <th class="checkbox-cell">Chọn</th>
+                        <th>Họ và tên</th>
+                        <th>Ngày sinh</th>
+                        <th>Giới tính</th>
+                        <th>CCCD</th>
+                        <th>Vai trò</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tv in thanh_vien_trong_ho %}
+                    <tr>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" name="tach_ids" value="{{ tv.id }}">
+                        </td>
+                        <td>{{ tv.ho_ten }}</td>
+                        <td>{{ tv.ngay_sinh|date:"d/m/Y" }}</td>
+                        <td>{{ tv.get_gioi_tinh_display|default:"-" }}</td>
+                        <td>{{ tv.cccd|default:"Chưa có" }}</td>
+                        <td>
+                            {% if tv.la_chu_ho %}
+                                <span class="badge chu-ho">Chủ hộ</span>
+                            {% else %}
+                                {{ tv.quan_he_chu_ho|default:"Thành viên" }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Buttons -->
+        <div class="btn-container">
+            <button type="submit" class="btn btn-primary">✓ Xác nhận tách hộ</button>
+            <a href="{% url 'users:ho_khau' %}" class="btn btn-secondary">✕ Hủy bỏ</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

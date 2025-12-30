@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Xóa Nhân khẩu - {{ thanh_vien.ho_ten }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-container {
+        max-width: 600px;
+        margin: 100px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        text-align: center;
+    }
+
+    .delete-icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+    }
+
+    .delete-container h2 {
+        color: #EF4444;
+        margin-bottom: 15px;
+    }
+
+    .delete-container p {
+        color: #666;
+        font-size: 16px;
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+
+    .warning-box {
+        background: #FEE2E2;
+        border: 2px solid #EF4444;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 25px 0;
+    }
+
+    .warning-box p {
+        color: #991B1B;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .person-info {
+        background: #F9FAFB;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 25px 0;
+        text-align: left;
+    }
+
+    .person-info .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .person-info .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .person-info .label {
+        font-weight: 600;
+        color: #666;
+    }
+
+    .person-info .value {
+        color: #333;
+    }
+
+    .btn-container {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+    }
+
+    .btn {
+        padding: 12px 30px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 15px;
+        transition: all 0.3s;
+        cursor: pointer;
+        border: none;
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        color: white;
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-secondary {
+        background: #e0e0e0;
+        color: #666;
+    }
+
+    .btn-secondary:hover {
+        background: #d0d0d0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-container">
+    <div class="delete-icon">⚠️</div>
+    <h2>Xác nhận xóa Nhân khẩu</h2>
+    <p>Bạn có chắc chắn muốn xóa thông tin nhân khẩu này khỏi hệ thống?</p>
+
+    <div class="person-info">
+        <div class="info-row">
+            <span class="label">Họ và tên:</span>
+            <span class="value">{{ thanh_vien.ho_ten }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">CCCD:</span>
+            <span class="value">{{ thanh_vien.cccd|default:"Chưa có" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Ngày sinh:</span>
+            <span class="value">{{ thanh_vien.ngay_sinh|date:"d/m/Y" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Hộ khẩu:</span>
+            <span class="value">{{ thanh_vien.ho_gia_dinh.ma_ho }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Vai trò:</span>
+            <span class="value">{% if thanh_vien.la_chu_ho %}Chủ hộ{% else %}{{ thanh_vien.quan_he_chu_ho|default:"Thành viên" }}{% endif %}</span>
+        </div>
+    </div>
+
+    <div class="warning-box">
+        <p>⚠️ Hành động này không thể hoàn tác!</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="btn-container">
+            <button type="submit" class="btn btn-danger">🗑️ Xác nhận xóa</button>
+            <a href="{% url 'users:nhan_khau' %}" class="btn btn-secondary">← Hủy bỏ</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

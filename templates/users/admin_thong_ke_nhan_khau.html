@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}Thống kê Nhân khẩu - Hệ thống Quản lý Tổ Dân Phố{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-container {
+        max-width: 1400px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+
+    .stats-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 30px;
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        color: white;
+        border-radius: 15px;
+    }
+
+    .stats-header h2 {
+        margin: 0 0 10px 0;
+        font-size: 32px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+
+    .stat-card h3 {
+        color: #10B981;
+        margin-bottom: 20px;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .stat-item:last-child {
+        border-bottom: none;
+        font-weight: 700;
+        font-size: 18px;
+        color: #10B981;
+        padding-top: 15px;
+        margin-top: 10px;
+        border-top: 2px solid #10B981;
+    }
+
+    .stat-item .label {
+        color: #666;
+        font-size: 15px;
+    }
+
+    .stat-item .value {
+        color: #333;
+        font-weight: 600;
+        font-size: 18px;
+    }
+
+    .stat-item:last-child .label {
+        color: #10B981;
+    }
+
+    .stat-item:last-child .value {
+        color: #10B981;
+    }
+
+    .chart-card {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    .chart-card h3 {
+        color: #10B981;
+        margin-bottom: 25px;
+        font-size: 22px;
+    }
+
+    .progress-bar-container {
+        margin-bottom: 20px;
+    }
+
+    .progress-bar-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+
+    .progress-bar-label .name {
+        color: #666;
+        font-weight: 600;
+    }
+
+    .progress-bar-label .count {
+        color: #333;
+        font-weight: 700;
+    }
+
+    .progress-bar {
+        height: 30px;
+        background: #f0f0f0;
+        border-radius: 15px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #10B981 0%, #059669 100%);
+        transition: width 1s ease-out;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 10px;
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    .progress-bar-fill.alt1 {
+        background: linear-gradient(90deg, #3B82F6 0%, #2563EB 100%);
+    }
+
+    .progress-bar-fill.alt2 {
+        background: linear-gradient(90deg, #F59E0B 0%, #D97706 100%);
+    }
+
+    .progress-bar-fill.alt3 {
+        background: linear-gradient(90deg, #EF4444 0%, #DC2626 100%);
+    }
+
+    .progress-bar-fill.alt4 {
+        background: linear-gradient(90deg, #8B5CF6 0%, #7C3AED 100%);
+    }
+
+    .progress-bar-fill.alt5 {
+        background: linear-gradient(90deg, #EC4899 0%, #DB2777 100%);
+    }
+
+    .progress-bar-fill.alt6 {
+        background: linear-gradient(90deg, #14B8A6 0%, #0D9488 100%);
+    }
+
+    .btn-back {
+        display: inline-block;
+        padding: 12px 30px;
+        background: #e0e0e0;
+        color: #666;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background 0.3s;
+    }
+
+    .btn-back:hover {
+        background: #d0d0d0;
+    }
+
+    .back-container {
+        text-align: center;
+        margin-top: 40px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-container">
+    <div class="stats-header">
+        <h2>📊 Thống kê Nhân khẩu</h2>
+        <p style="margin: 0; opacity: 0.9;">Báo cáo chi tiết về dân số trong tổ dân phố</p>
+    </div>
+
+    <!-- Thống kê tổng quan -->
+    <div class="stats-grid">
+        <!-- Giới tính -->
+        <div class="stat-card">
+            <h3>👥 Theo Giới tính</h3>
+            {% for item in gioi_tinh_stats %}
+            <div class="stat-item">
+                <span class="label">{{ item.gioi_tinh|default:"Chưa xác định" }}</span>
+                <span class="value">{{ item.count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Trạng thái -->
+        <div class="stat-card">
+            <h3>📍 Theo Trạng thái cư trú</h3>
+            {% for item in trang_thai_stats %}
+            <div class="stat-item">
+                <span class="label">{{ item.get_trang_thai_display|default:item.trang_thai }}</span>
+                <span class="value">{{ item.count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Thống kê độ tuổi -->
+    <div class="chart-card">
+        <h3>📈 Thống kê theo Độ tuổi</h3>
+        {% for group_name, count in age_groups.items %}
+        <div class="progress-bar-container">
+            <div class="progress-bar-label">
+                <span class="name">{{ group_name }}</span>
+                <span class="count">{{ count }} người</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-bar-fill {% cycle 'alt1' 'alt2' 'alt3' 'alt4' 'alt5' 'alt6' %}" 
+                     style="width: {% widthratio count 100 100 %}%;">
+                    {% if count > 0 %}{{ count }}{% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Tổng kết -->
+    <div class="chart-card">
+        <h3>📋 Tổng kết</h3>
+        <div class="stat-item">
+            <span class="label">Tổng số nhân khẩu trong hệ thống</span>
+            <span class="value">{{ gioi_tinh_stats|length }} nhóm giới tính</span>
+        </div>
+        <div class="stat-item">
+            <span class="label">Tổng số độ tuổi được thống kê</span>
+            <span class="value">{{ age_groups|length }} nhóm tuổi</span>
+        </div>
+    </div>
+
+    <div class="back-container">
+        <a href="{% url 'users:nhan_khau' %}" class="btn-back">← Quay lại Quản lý Nhân khẩu</a>
+    </div>
+</div>
+{% endblock %}

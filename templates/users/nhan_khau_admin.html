@@ -157,6 +157,25 @@
         background: #2563EB;
     }
 
+    .btn-edit {
+        background: #F59E0B;
+        color: white;
+        margin-right: 5px;
+    }
+
+    .btn-edit:hover {
+        background: #D97706;
+    }
+
+    .btn-delete {
+        background: #EF4444;
+        color: white;
+    }
+
+    .btn-delete:hover {
+        background: #DC2626;
+    }
+
     .btn-back {
         background: #e0e0e0;
         color: #666;
@@ -166,6 +185,11 @@
 
     .btn-back:hover {
         background: #d0d0d0;
+    }
+
+    .actions-cell {
+        display: flex;
+        gap: 5px;
     }
 
     .empty-state {
@@ -223,6 +247,10 @@
             <h2>👥 Quản lý Nhân khẩu</h2>
             <p style="margin: 5px 0 0 0; opacity: 0.9;">Danh sách tất cả nhân khẩu trong tổ dân phố</p>
         </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="{% url 'users:admin_them_nhan_khau' %}" class="btn" style="background: white; color: #7C3AED; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-weight: 600;">➕ Thêm mới</a>
+            <a href="{% url 'users:admin_thong_ke_nhan_khau' %}" class="btn" style="background: white; color: #7C3AED; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-weight: 600;">📊 Thống kê</a>
+        </div>
     </div>
 
     <!-- Tìm kiếm -->
@@ -247,6 +275,7 @@
                     <th>Vai trò</th>
                     <th>Trạng thái</th>
                     <th>Nghề nghiệp</th>
+                    <th>Thao tác</th>
                 </tr>
             </thead>
             <tbody>
@@ -274,6 +303,12 @@
                         {% endif %}
                     </td>
                     <td>{{ nk.nghe_nghiep|default:"-" }}</td>
+                    <td>
+                        <div class="actions-cell">
+                            <a href="{% url 'users:admin_sua_nhan_khau' nk.id %}" class="btn btn-edit">✏️</a>
+                            <a href="{% url 'users:admin_xoa_nhan_khau' nk.id %}" class="btn btn-delete">🗑️</a>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
