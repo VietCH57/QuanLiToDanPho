@@ -13,6 +13,8 @@ admin = User.objects.create_user(username='admin', password='admin123', email='a
 admin.is_staff = True
 admin.is_superuser = True
 admin.save()
+# Refresh để lấy profile được tạo bởi signal
+admin.refresh_from_db()
 admin.profile.role = 'admin'
 admin.profile.full_name = 'Nguyễn Văn Admin'
 admin.profile.cccd_id = '001234567890'

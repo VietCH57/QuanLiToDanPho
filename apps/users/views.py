@@ -56,24 +56,53 @@ def logout_view(request):
 @login_required
 def dashboard_view(request):
     """
-    Trang dashboard với nội dung khác nhau theo role
+    Trang chủ với các nút điều hướng chính
     """
     user_profile = request.user.profile
     role = user_profile.role
     
-    # Nội dung theo role
-    if role in ['admin', 'citizenship_manager', 'commendation_manager']:
-        message = "hú, bạn là tinh hoa, oách vl"
-        role_class = "manager"
-    else:  # citizen
-        message = "con gà máu bùn"
-        role_class = "citizen"
+    # Kiểm tra quyền admin
+    is_admin = role == 'admin' or request.user.is_superuser
     
     context = {
         'user_profile': user_profile,
         'role_display': user_profile.get_role_display(),
-        'message': message,
-        'role_class': role_class,
+        'is_admin': is_admin,
     }
     
     return render(request, 'users/dashboard.html', context)
+
+
+@login_required
+def nhan_khau_view(request):
+    """Trang khai báo và tra cứu nhân khẩu"""
+    return render(request, 'users/nhan_khau.html')
+
+
+@login_required
+def ho_khau_view(request):
+    """Trang quản lý hộ khẩu"""
+    return render(request, 'users/ho_khau.html')
+
+
+@login_required
+def tam_tru_tam_vang_view(request):
+    """Trang khai báo tạm trú - tạm vắng"""
+    return render(request, 'users/tam_tru_tam_vang.html')
+
+
+@login_required
+def khen_thuong_view(request):
+    """Trang khen thưởng"""
+    return render(request, 'users/khen_thuong.html')
+
+
+@login_required
+def quan_ly_nguoi_dung_view(request):
+    """Trang quản lý người dùng (chỉ admin)"""
+    # Kiểm tra quyền admin
+    if request.user.profile.role != 'admin' and not request.user.is_superuser:
+        messages.error(request, 'Bạn không có quyền truy cập trang này!')
+        return redirect('users:dashboard')
+    
+    return render(request, 'users/quan_ly_nguoi_dung.html')
