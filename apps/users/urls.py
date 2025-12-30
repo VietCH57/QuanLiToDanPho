@@ -21,4 +21,12 @@ urlpatterns = [
     path('tam-tru-tam-vang/chi-tiet-tam-vang/<int:pk>/', views.chi_tiet_tam_vang_view, name='chi_tiet_tam_vang'),
     path('khen-thuong/', views.khen_thuong_view, name='khen_thuong'),
     path('quan-ly-nguoi-dung/', views.quan_ly_nguoi_dung_view, name='quan_ly_nguoi_dung'),
+    # Admin CRUD nhân khẩu
+    path('admin/nhan-khau/them/', views.admin_them_nhan_khau, name='admin_them_nhan_khau'),
+    path('admin/nhan-khau/sua/<int:pk>/', views.admin_sua_nhan_khau, name='admin_sua_nhan_khau'),
+    path('admin/nhan-khau/xoa/<int:pk>/', views.admin_xoa_nhan_khau, name='admin_xoa_nhan_khau'),
+    # Admin thống kê nhân khẩu
+    path('admin/nhan-khau/thong-ke/', views.admin_thong_ke_nhan_khau, name='admin_thong_ke_nhan_khau'),
+    # Admin tách hộ
+    path('admin/ho-khau/tach/<int:ho_id>/', views.admin_tach_ho, name='admin_tach_ho'),
 ]

@@ -1,72 +1,232 @@
 {% extends 'base.html' %}
 
-{% block title %}Nhân khẩu - Hệ thống Quản lý Tổ Dân Phố{% endblock %}
+{% block title %}Thông tin Nhân khẩu - Hệ thống Quản lý Tổ Dân Phố{% endblock %}
 
 {% block extra_css %}
 <style>
-    .page-container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 40px 20px;
+    .info-container {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 20px;
     }
 
-    .page-header {
+    .info-card {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .info-header {
         text-align: center;
-        margin-bottom: 40px;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 3px solid #7C3AED;
     }
 
-    .page-header h1 {
+    .info-header h2 {
         color: #333;
-        font-size: 36px;
+        font-size: 28px;
         margin-bottom: 10px;
     }
 
-    .placeholder-content {
-        background: white;
-        padding: 60px;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        text-align: center;
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #7C3AED;
+        margin: 30px 0 15px 0;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f0f0f0;
     }
 
-    .placeholder-icon {
-        font-size: 100px;
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
         margin-bottom: 20px;
+    }
+
+    .info-item {
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #7C3AED;
+    }
+
+    .info-item.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .info-label {
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+
+    .info-value {
+        font-size: 16px;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .info-value.empty {
+        color: #999;
+        font-style: italic;
     }
 
     .btn-back {
         display: inline-block;
-        margin-top: 30px;
         padding: 12px 30px;
-        background: #667eea;
-        color: white;
-        border-radius: 8px;
+        background: #e0e0e0;
+        color: #666;
         text-decoration: none;
-        transition: all 0.3s ease;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s;
+        margin-top: 20px;
     }
 
     .btn-back:hover {
-        background: #5568d3;
-        transform: translateY(-2px);
+        background: #d0d0d0;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .no-data .icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+    }
+
+    .no-data h3 {
+        color: #666;
+        margin-bottom: 10px;
+    }
+
+    .no-data p {
+        color: #999;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-container">
-    <div class="page-header">
-        <h1>👥 Nhân khẩu</h1>
-        <p style="color: #666;">Khai báo và tra cứu nhân khẩu</p>
-    </div>
+<div class="info-container">
+    <div class="info-card">
+        <div class="info-header">
+            <h2>👤 Thông tin Nhân khẩu</h2>
+            <p style="color: #666;">Thông tin cá nhân của bạn</p>
+        </div>
 
-    <div class="placeholder-content">
-        <div class="placeholder-icon">🚧</div>
-        <h2 style="color: #333; margin-bottom: 20px;">Trang đang được phát triển</h2>
-        <p style="color: #666; font-size: 18px;">Chức năng khai báo và tra cứu nhân khẩu sẽ sớm được cập nhật.</p>
-        
-        <a href="{% url 'users:dashboard' %}" class="btn-back">
-            ← Quay lại Trang chủ
-        </a>
+        {% if thanh_vien %}
+            <!-- PHẦN 1: Thông tin cá nhân -->
+            <div class="section-title">📋 Thông tin cá nhân</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Họ và tên</div>
+                    <div class="info-value">{{ thanh_vien.ho_ten }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Bí danh</div>
+                    <div class="info-value {% if not thanh_vien.bi_danh %}empty{% endif %}">{{ thanh_vien.bi_danh|default:"Không có" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Ngày sinh</div>
+                    <div class="info-value">{{ thanh_vien.ngay_sinh|date:"d/m/Y" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Giới tính</div>
+                    <div class="info-value">{{ thanh_vien.get_gioi_tinh_display|default:"Chưa cập nhật" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Nơi sinh</div>
+                    <div class="info-value {% if not thanh_vien.noi_sinh %}empty{% endif %}">{{ thanh_vien.noi_sinh|default:"Chưa cập nhật" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Nguyên quán</div>
+                    <div class="info-value {% if not thanh_vien.nguyen_quan %}empty{% endif %}">{{ thanh_vien.nguyen_quan|default:"Chưa cập nhật" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Dân tộc</div>
+                    <div class="info-value">{{ thanh_vien.dan_toc|default:"Kinh" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Nghề nghiệp</div>
+                    <div class="info-value {% if not thanh_vien.nghe_nghiep %}empty{% endif %}">{{ thanh_vien.nghe_nghiep|default:"Chưa cập nhật" }}</div>
+                </div>
+                <div class="info-item full-width">
+                    <div class="info-label">Nơi làm việc</div>
+                    <div class="info-value {% if not thanh_vien.noi_lam_viec %}empty{% endif %}">{{ thanh_vien.noi_lam_viec|default:"Chưa cập nhật" }}</div>
+                </div>
+            </div>
+
+            <!-- PHẦN 2: Thông tin CCCD -->
+            <div class="section-title">🪪 Thông tin CCCD</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Số CCCD</div>
+                    <div class="info-value">{{ thanh_vien.cccd|default:"Chưa cập nhật" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Ngày cấp</div>
+                    <div class="info-value {% if not thanh_vien.ngay_cap_cccd %}empty{% endif %}">{{ thanh_vien.ngay_cap_cccd|date:"d/m/Y"|default:"Chưa cập nhật" }}</div>
+                </div>
+                <div class="info-item full-width">
+                    <div class="info-label">Nơi cấp</div>
+                    <div class="info-value {% if not thanh_vien.noi_cap_cccd %}empty{% endif %}">{{ thanh_vien.noi_cap_cccd|default:"Chưa cập nhật" }}</div>
+                </div>
+            </div>
+
+            <!-- PHẦN 3: Thông tin cư trú -->
+            <div class="section-title">🏠 Thông tin cư trú</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Mã hộ khẩu</div>
+                    <div class="info-value">{{ thanh_vien.ho_gia_dinh.ma_ho }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Quan hệ với chủ hộ</div>
+                    <div class="info-value">{{ thanh_vien.quan_he_chu_ho|default:"Thành viên" }}</div>
+                </div>
+                <div class="info-item full-width">
+                    <div class="info-label">Địa chỉ thường trú hiện tại</div>
+                    <div class="info-value">{{ thanh_vien.ho_gia_dinh.dia_chi }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Ngày đăng ký thường trú</div>
+                    <div class="info-value {% if not thanh_vien.ngay_dang_ky_thuong_tru %}empty{% endif %}">{{ thanh_vien.ngay_dang_ky_thuong_tru|date:"d/m/Y"|default:"Chưa cập nhật" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Trạng thái cư trú</div>
+                    <div class="info-value">{{ thanh_vien.get_trang_thai_display }}</div>
+                </div>
+                <div class="info-item full-width">
+                    <div class="info-label">Địa chỉ trước khi chuyển đến</div>
+                    <div class="info-value {% if not thanh_vien.dia_chi_truoc_chuyen_den %}empty{% endif %}">{{ thanh_vien.dia_chi_truoc_chuyen_den|default:"Chưa cập nhật" }}</div>
+                </div>
+            </div>
+
+            {% if thanh_vien.ghi_chu_thay_doi %}
+            <!-- PHẦN 4: Ghi chú thay đổi -->
+            <div class="section-title">📝 Ghi chú thay đổi</div>
+            <div class="info-item full-width">
+                <div class="info-value">{{ thanh_vien.ghi_chu_thay_doi }}</div>
+            </div>
+            {% endif %}
+
+        {% else %}
+            <div class="no-data">
+                <div class="icon">❌</div>
+                <h3>Không tìm thấy thông tin nhân khẩu</h3>
+                <p>Số CCCD của bạn chưa được đăng ký trong hệ thống. Vui lòng liên hệ tổ trưởng để cập nhật thông tin.</p>
+            </div>
+        {% endif %}
+
+        <div style="text-align: center;">
+            <a href="{% url 'users:dashboard' %}" class="btn-back">← Quay lại Trang chủ</a>
+        </div>
     </div>
 </div>
 {% endblock %}

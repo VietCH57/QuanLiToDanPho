@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Xoá nhân khẩu</h2>
+<p>Bạn có chắc chắn muốn xoá nhân khẩu <strong>{{ thanh_vien.ho_ten }}</strong> (CCCD: {{ thanh_vien.cccd }}) không?</p>
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-danger">Xoá</button>
+  <a href="{% url 'users:nhan_khau' %}" class="btn btn-secondary">Huỷ</a>
+</form>
+{% endblock %}

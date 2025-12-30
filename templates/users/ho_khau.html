@@ -1,72 +1,258 @@
 {% extends 'base.html' %}
 
-{% block title %}Hộ khẩu - Hệ thống Quản lý Tổ Dân Phố{% endblock %}
+{% block title %}Sổ Hộ Khẩu - Hệ thống Quản lý Tổ Dân Phố{% endblock %}
 
 {% block extra_css %}
 <style>
-    .page-container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 40px 20px;
+    .ho-khau-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 20px;
     }
 
-    .page-header {
+    .ho-khau-card {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .ho-khau-header {
         text-align: center;
-        margin-bottom: 40px;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 3px solid #EC4899;
     }
 
-    .page-header h1 {
+    .ho-khau-header h2 {
         color: #333;
-        font-size: 36px;
+        font-size: 28px;
         margin-bottom: 10px;
     }
 
-    .placeholder-content {
-        background: white;
-        padding: 60px;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        text-align: center;
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #EC4899;
+        margin: 30px 0 15px 0;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
-    .placeholder-icon {
-        font-size: 100px;
-        margin-bottom: 20px;
+    .info-box {
+        background: linear-gradient(135deg, #FFE5F0 0%, #FFF5F7 100%);
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        border-left: 4px solid #EC4899;
+    }
+
+    .info-box .row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .info-box .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-box .label {
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    .info-box .value {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .members-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .members-table thead {
+        background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);
+        color: white;
+    }
+
+    .members-table th {
+        padding: 15px 10px;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .members-table tbody tr {
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.2s;
+    }
+
+    .members-table tbody tr:hover {
+        background: #FFF5F7;
+    }
+
+    .members-table tbody tr.chu-ho {
+        background: #FFE5F0;
+        font-weight: 600;
+    }
+
+    .members-table td {
+        padding: 15px 10px;
+        color: #333;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .badge.chu-ho {
+        background: #EC4899;
+        color: white;
+    }
+
+    .badge.thanh-vien {
+        background: #E5E7EB;
+        color: #666;
     }
 
     .btn-back {
         display: inline-block;
-        margin-top: 30px;
         padding: 12px 30px;
-        background: #f5576c;
-        color: white;
-        border-radius: 8px;
+        background: #e0e0e0;
+        color: #666;
         text-decoration: none;
-        transition: all 0.3s ease;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s;
+        margin-top: 20px;
     }
 
     .btn-back:hover {
-        background: #e04555;
-        transform: translateY(-2px);
+        background: #d0d0d0;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .no-data .icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+    }
+
+    .no-data h3 {
+        color: #666;
+        margin-bottom: 10px;
+    }
+
+    .no-data p {
+        color: #999;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-container">
-    <div class="page-header">
-        <h1>🏡 Hộ khẩu</h1>
-        <p style="color: #666;">Quản lý hộ khẩu</p>
-    </div>
+<div class="ho-khau-container">
+    <div class="ho-khau-card">
+        <div class="ho-khau-header">
+            <h2>📖 Sổ Hộ Khẩu</h2>
+            <p style="color: #666;">Thông tin hộ gia đình của bạn</p>
+        </div>
 
-    <div class="placeholder-content">
-        <div class="placeholder-icon">🚧</div>
-        <h2 style="color: #333; margin-bottom: 20px;">Trang đang được phát triển</h2>
-        <p style="color: #666; font-size: 18px;">Chức năng quản lý hộ khẩu sẽ sớm được cập nhật.</p>
-        
-        <a href="{% url 'users:dashboard' %}" class="btn-back">
-            ← Quay lại Trang chủ
-        </a>
+        {% if ho_gia_dinh %}
+            <!-- Thông tin chung của hộ -->
+            <div class="info-box">
+                <h3 style="margin: 0 0 10px 0; color: #EC4899;">Thông tin chung</h3>
+                <div class="row">
+                    <div class="info-item">
+                        <span class="label">Mã số hộ khẩu</span>
+                        <span class="value">{{ ho_gia_dinh.ma_ho }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Họ tên chủ hộ</span>
+                        <span class="value">{{ ho_gia_dinh.chu_ho.ho_ten }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Số thành viên</span>
+                        <span class="value">{{ thanh_vien_trong_ho|length }} người</span>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 10px;">
+                    <div class="info-item" style="grid-column: 1 / -1;">
+                        <span class="label">Địa chỉ</span>
+                        <span class="value">{{ ho_gia_dinh.dia_chi }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danh sách thành viên -->
+            <div class="section-title">
+                <span>👥</span>
+                <span>Danh sách thành viên trong hộ</span>
+            </div>
+            
+            <table class="members-table">
+                <thead>
+                    <tr>
+                        <th>Họ và tên</th>
+                        <th>Ngày sinh</th>
+                        <th>Giới tính</th>
+                        <th>Quan hệ với chủ hộ</th>
+                        <th>Số CCCD</th>
+                        <th>Nghề nghiệp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tv in thanh_vien_trong_ho %}
+                    <tr {% if tv.la_chu_ho %}class="chu-ho"{% endif %}>
+                        <td>
+                            {{ tv.ho_ten }}
+                            {% if tv.la_chu_ho %}
+                            <span class="badge chu-ho">Chủ hộ</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ tv.ngay_sinh|date:"d/m/Y" }}</td>
+                        <td>{{ tv.get_gioi_tinh_display|default:"-" }}</td>
+                        <td>{{ tv.quan_he_chu_ho|default:"Thành viên" }}</td>
+                        <td>{{ tv.cccd|default:"Chưa cập nhật" }}</td>
+                        <td>{{ tv.nghe_nghiep|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if thanh_vien_trong_ho|length == 0 %}
+            <div class="no-data">
+                <div class="icon">📭</div>
+                <h3>Chưa có thành viên nào trong hộ</h3>
+            </div>
+            {% endif %}
+
+        {% else %}
+            <div class="no-data">
+                <div class="icon">❌</div>
+                <h3>Không tìm thấy thông tin hộ khẩu</h3>
+                <p>Số CCCD của bạn chưa được liên kết với hộ khẩu nào. Vui lòng liên hệ tổ trưởng để cập nhật thông tin.</p>
+            </div>
+        {% endif %}
+
+        <div style="text-align: center;">
+            <a href="{% url 'users:dashboard' %}" class="btn-back">← Quay lại Trang chủ</a>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -1,3 +1,84 @@
+# --- ADMIN: Thống kê nhân khẩu ---
+from django.shortcuts import render
+from django.http import HttpResponseForbidden
+from django.contrib.auth.decorators import login_required
+@login_required
+def admin_thong_ke_nhan_khau(request):
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    from apps.core.models import ThanhVien
+    from django.db.models import Count, Q
+    # Thống kê theo giới tính
+    gioi_tinh_stats = ThanhVien.objects.values('gioi_tinh').annotate(count=Count('id'))
+    # Thống kê theo trạng thái cư trú
+    trang_thai_stats = ThanhVien.objects.values('trang_thai').annotate(count=Count('id'))
+    # Thống kê theo độ tuổi
+    import datetime
+    today = datetime.date.today()
+    def get_age(birthdate):
+        return today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
+    all_tv = ThanhVien.objects.all()
+    age_groups = {
+        'Mầm non (0-5)': 0,
+        'Mẫu giáo (6-7)': 0,
+        'Cấp 1 (8-10)': 0,
+        'Cấp 2 (11-14)': 0,
+        'Cấp 3 (15-17)': 0,
+        'Lao động (18-60)': 0,
+        'Nghỉ hưu (>60)': 0,
+    }
+    for tv in all_tv:
+        age = get_age(tv.ngay_sinh)
+        if age <= 5:
+            age_groups['Mầm non (0-5)'] += 1
+        elif age <= 7:
+            age_groups['Mẫu giáo (6-7)'] += 1
+        elif age <= 10:
+            age_groups['Cấp 1 (8-10)'] += 1
+        elif age <= 14:
+            age_groups['Cấp 2 (11-14)'] += 1
+        elif age <= 17:
+            age_groups['Cấp 3 (15-17)'] += 1
+        elif age <= 60:
+            age_groups['Lao động (18-60)'] += 1
+        else:
+            age_groups['Nghỉ hưu (>60)'] += 1
+    context = {
+        'gioi_tinh_stats': gioi_tinh_stats,
+        'trang_thai_stats': trang_thai_stats,
+        'age_groups': age_groups,
+    }
+    return render(request, 'users/admin_thong_ke_nhan_khau.html', context)
+# --- ADMIN: Tách hộ ---
+@login_required
+def admin_tach_ho(request, ho_id):
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    from apps.core.models import HoGiaDinh, ThanhVien, LichSuThayDoiHo
+    ho = HoGiaDinh.objects.get(pk=ho_id)
+    thanh_vien_trong_ho = ho.thanh_vien_trong_ho.all()
+    if request.method == 'POST':
+        ids = request.POST.getlist('tach_ids')
+        if not ids:
+            messages.error(request, 'Vui lòng chọn ít nhất một nhân khẩu để tách!')
+        else:
+            # Tạo hộ mới
+            ma_ho_moi = request.POST.get('ma_ho_moi')
+            dia_chi_moi = request.POST.get('dia_chi_moi')
+            ho_moi = HoGiaDinh.objects.create(ma_ho=ma_ho_moi, dia_chi=dia_chi_moi)
+            # Chuyển các thành viên sang hộ mới
+            ThanhVien.objects.filter(id__in=ids).update(ho_gia_dinh=ho_moi)
+            # Ghi lịch sử
+            LichSuThayDoiHo.objects.create(
+                ho_gia_dinh=ho,
+                loai_thay_doi='TachHo',
+                noi_dung=f'Tách {len(ids)} nhân khẩu sang hộ mới {ma_ho_moi}',
+                ngay_thay_doi=timezone.now().date(),
+                nguoi_thuc_hien=request.user
+            )
+            messages.success(request, f'Đã tách hộ thành công!')
+            return redirect('users:ho_khau')
+    return render(request, 'users/admin_tach_ho.html', {'ho': ho, 'thanh_vien_trong_ho': thanh_vien_trong_ho})
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -129,14 +210,149 @@ def dashboard_view(request):
 
 @login_required
 def nhan_khau_view(request):
-    """Trang khai báo và tra cứu nhân khẩu"""
-    return render(request, 'users/nhan_khau.html')
+    """Trang xem thông tin nhân khẩu (thông tin cá nhân)"""
+    from apps.core.models import ThanhVien
+    from django.db import models
+    
+    user_profile = request.user.profile
+    is_manager = user_profile.role in ['admin', 'citizenship_manager']
+    
+    if is_manager:
+        # Cán bộ: Xem danh sách tất cả nhân khẩu
+        danh_sach_nhan_khau = ThanhVien.objects.select_related('ho_gia_dinh').all().order_by('ho_gia_dinh__ma_ho', '-la_chu_ho')
+        
+        # Tìm kiếm
+        search = request.GET.get('search', '').strip()
+        if search:
+            danh_sach_nhan_khau = danh_sach_nhan_khau.filter(
+                models.Q(ho_ten__icontains=search) |
+                models.Q(cccd__icontains=search) |
+                models.Q(ho_gia_dinh__ma_ho__icontains=search)
+            )
+        
+        context = {
+            'is_manager': is_manager,
+            'danh_sach_nhan_khau': danh_sach_nhan_khau,
+            'search': search,
+        }
+        return render(request, 'users/nhan_khau_admin.html', context)
+    else:
+        # Người dân: Xem thông tin cá nhân
+        thanh_vien = None
+        try:
+            thanh_vien = ThanhVien.objects.select_related('ho_gia_dinh').get(cccd=user_profile.cccd_id)
+        except ThanhVien.DoesNotExist:
+            pass
+        
+        context = {
+            'is_manager': is_manager,
+            'thanh_vien': thanh_vien,
+        }
+        return render(request, 'users/nhan_khau.html', context)
 
 
 @login_required
 def ho_khau_view(request):
     """Trang quản lý hộ khẩu"""
-    return render(request, 'users/ho_khau.html')
+    from apps.core.models import HoGiaDinh, ThanhVien
+    from django.db import models
+    
+    user_profile = request.user.profile
+    is_manager = user_profile.role in ['admin', 'citizenship_manager']
+    
+    if is_manager:
+        # Cán bộ: Xem danh sách tất cả hộ
+        danh_sach_ho = HoGiaDinh.objects.select_related('chu_ho').prefetch_related('thanh_vien_trong_ho').all().order_by('ma_ho')
+        
+        # Tìm kiếm
+        search = request.GET.get('search', '').strip()
+        if search:
+            danh_sach_ho = danh_sach_ho.filter(
+                models.Q(ma_ho__icontains=search) |
+                models.Q(chu_ho__ho_ten__icontains=search) |
+                models.Q(dia_chi__icontains=search)
+            )
+        
+        # Thống kê
+        tong_so_ho = danh_sach_ho.count()
+        tong_nhan_khau = ThanhVien.objects.filter(trang_thai='ThuongTru').count()
+        
+        context = {
+            'is_manager': is_manager,
+            'danh_sach_ho': danh_sach_ho,
+            'search': search,
+            'tong_so_ho': tong_so_ho,
+            'tong_nhan_khau': tong_nhan_khau,
+        }
+        return render(request, 'users/ho_khau_admin.html', context)
+    else:
+        # Người dân: Xem sổ hộ khẩu của mình
+        thanh_vien = None
+        ho_gia_dinh = None
+        thanh_vien_trong_ho = []
+        
+        try:
+            thanh_vien = ThanhVien.objects.select_related('ho_gia_dinh__chu_ho').get(cccd=user_profile.cccd_id)
+            ho_gia_dinh = thanh_vien.ho_gia_dinh
+            # Lấy danh sách thành viên trong hộ, chủ hộ đứng đầu
+            thanh_vien_trong_ho = ho_gia_dinh.thanh_vien_trong_ho.all().order_by('-la_chu_ho', 'ngay_sinh')
+        except ThanhVien.DoesNotExist:
+            pass
+        
+        context = {
+            'is_manager': is_manager,
+            'thanh_vien': thanh_vien,
+            'ho_gia_dinh': ho_gia_dinh,
+            'thanh_vien_trong_ho': thanh_vien_trong_ho,
+        }
+        return render(request, 'users/ho_khau.html', context)
+    
+    if is_manager:
+        # Cán bộ: Xem danh sách tất cả hộ
+        danh_sach_ho = HoGiaDinh.objects.select_related('chu_ho').prefetch_related('thanh_vien_trong_ho').all().order_by('ma_ho')
+        
+        # Tìm kiếm
+        search = request.GET.get('search', '').strip()
+        if search:
+            danh_sach_ho = danh_sach_ho.filter(
+                models.Q(ma_ho__icontains=search) |
+                models.Q(chu_ho__ho_ten__icontains=search) |
+                models.Q(dia_chi__icontains=search)
+            )
+        
+        # Thống kê
+        tong_so_ho = danh_sach_ho.count()
+        tong_nhan_khau = ThanhVien.objects.filter(trang_thai='ThuongTru').count()
+        
+        context = {
+            'is_manager': is_manager,
+            'danh_sach_ho': danh_sach_ho,
+            'search': search,
+            'tong_so_ho': tong_so_ho,
+            'tong_nhan_khau': tong_nhan_khau,
+        }
+        return render(request, 'users/ho_khau_admin.html', context)
+    else:
+        # Người dân: Xem sổ hộ khẩu của mình
+        thanh_vien = None
+        ho_gia_dinh = None
+        thanh_vien_trong_ho = []
+        
+        try:
+            thanh_vien = ThanhVien.objects.select_related('ho_gia_dinh__chu_ho').get(cccd=user_profile.cccd_id)
+            ho_gia_dinh = thanh_vien.ho_gia_dinh
+            # Lấy danh sách thành viên trong hộ, chủ hộ đứng đầu
+            thanh_vien_trong_ho = ho_gia_dinh.thanh_vien_trong_ho.all().order_by('-la_chu_ho', 'ngay_sinh')
+        except ThanhVien.DoesNotExist:
+            pass
+        
+        context = {
+            'is_manager': is_manager,
+            'thanh_vien': thanh_vien,
+            'ho_gia_dinh': ho_gia_dinh,
+            'thanh_vien_trong_ho': thanh_vien_trong_ho,
+        }
+        return render(request, 'users/ho_khau.html', context)
 
 
 @login_required
@@ -503,3 +719,55 @@ def quan_ly_nguoi_dung_view(request):
         return redirect('users:dashboard')
     
     return render(request, 'users/quan_ly_nguoi_dung.html')
+
+
+# --- ADMIN: CRUD nhân khẩu ---
+from django.urls import reverse
+from django.http import HttpResponseForbidden
+from apps.core.models import ThanhVien, HoGiaDinh
+from django import forms
+
+class ThanhVienForm(forms.ModelForm):
+    class Meta:
+        model = ThanhVien
+        fields = ['ho_gia_dinh', 'ho_ten', 'bi_danh', 'cccd', 'ngay_sinh', 'noi_sinh', 'nguyen_quan', 'dan_toc', 'gioi_tinh', 'nghe_nghiep', 'noi_lam_viec', 'ngay_cap_cccd', 'noi_cap_cccd', 'ngay_dang_ky_thuong_tru', 'dia_chi_truoc_chuyen_den', 'la_chu_ho', 'quan_he_chu_ho', 'trang_thai']
+
+@login_required
+def admin_them_nhan_khau(request):
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    if request.method == 'POST':
+        form = ThanhVienForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Đã thêm nhân khẩu mới!')
+            return redirect('users:nhan_khau')
+    else:
+        form = ThanhVienForm()
+    return render(request, 'users/admin_them_nhan_khau.html', {'form': form})
+
+@login_required
+def admin_sua_nhan_khau(request, pk):
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    thanh_vien = ThanhVien.objects.get(pk=pk)
+    if request.method == 'POST':
+        form = ThanhVienForm(request.POST, instance=thanh_vien)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Đã cập nhật thông tin nhân khẩu!')
+            return redirect('users:nhan_khau')
+    else:
+        form = ThanhVienForm(instance=thanh_vien)
+    return render(request, 'users/admin_sua_nhan_khau.html', {'form': form, 'thanh_vien': thanh_vien})
+
+@login_required
+def admin_xoa_nhan_khau(request, pk):
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    thanh_vien = ThanhVien.objects.get(pk=pk)
+    if request.method == 'POST':
+        thanh_vien.delete()
+        messages.success(request, 'Đã xoá nhân khẩu!')
+        return redirect('users:nhan_khau')
+    return render(request, 'users/admin_xoa_nhan_khau.html', {'thanh_vien': thanh_vien})

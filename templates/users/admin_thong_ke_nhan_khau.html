@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Thống kê nhân khẩu</h2>
+<h4>Theo giới tính</h4>
+<ul>
+  {% for item in gioi_tinh_stats %}
+    <li>{{ item.gioi_tinh|default:'Chưa khai báo' }}: {{ item.count }}</li>
+  {% endfor %}
+</ul>
+<h4>Theo trạng thái cư trú</h4>
+<ul>
+  {% for item in trang_thai_stats %}
+    <li>{{ item.trang_thai|default:'Chưa khai báo' }}: {{ item.count }}</li>
+  {% endfor %}
+</ul>
+<h4>Theo độ tuổi</h4>
+<ul>
+  {% for label, count in age_groups.items %}
+    <li>{{ label }}: {{ count }}</li>
+  {% endfor %}
+</ul>
+<a href="{% url 'users:nhan_khau' %}" class="btn btn-secondary">Quay lại</a>
+{% endblock %}

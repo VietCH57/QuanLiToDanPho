@@ -69,14 +69,33 @@ class ThanhVien(models.Model):
     
     # --- THÔNG TIN CÁ NHÂN ---
     ho_ten = models.CharField(max_length=100, verbose_name="Họ Tên")
+    bi_danh = models.CharField(max_length=100, blank=True, verbose_name="Bí danh")
     cccd = models.CharField(max_length=12, unique=True, blank=True, null=True, verbose_name="CCCD")
     ngay_sinh = models.DateField(verbose_name="Ngày Sinh")
+    noi_sinh = models.CharField(max_length=255, blank=True, verbose_name="Nơi sinh")
+    nguyen_quan = models.CharField(max_length=255, blank=True, verbose_name="Nguyên quán")
+    dan_toc = models.CharField(max_length=50, blank=True, default="Kinh", verbose_name="Dân tộc")
     gioi_tinh = models.CharField(max_length=10, choices=GIOI_TINH, blank=True, null=True, verbose_name="Giới tính")
+    nghe_nghiep = models.CharField(max_length=100, blank=True, verbose_name="Nghề nghiệp")
+    noi_lam_viec = models.CharField(max_length=255, blank=True, verbose_name="Nơi làm việc")
+    
+    # --- THÔNG TIN CCCD ---
+    ngay_cap_cccd = models.DateField(blank=True, null=True, verbose_name="Ngày cấp CCCD")
+    noi_cap_cccd = models.CharField(max_length=255, blank=True, verbose_name="Nơi cấp CCCD")
+    
+    # --- THÔNG TIN CƯ TRÚ ---
+    ngay_dang_ky_thuong_tru = models.DateField(blank=True, null=True, verbose_name="Ngày đăng ký thường trú")
+    dia_chi_truoc_chuyen_den = models.CharField(max_length=255, blank=True, verbose_name="Địa chỉ trước khi chuyển đến")
     
     # --- VAI TRÒ TRONG HỘ ---
     quan_he_chu_ho = models.CharField(max_length=50, blank=True, verbose_name="Quan hệ với chủ hộ")
     la_chu_ho = models.BooleanField(default=False, verbose_name="Là chủ hộ")
     trang_thai = models.CharField(max_length=20, choices=TRANG_THAI, default='ThuongTru', verbose_name="Trạng thái cư trú")
+    
+    # --- THÔNG TIN CHUYỂN ĐI / QUA ĐỜI ---
+    ngay_chuyen_di = models.DateField(blank=True, null=True, verbose_name="Ngày chuyển đi")
+    noi_chuyen_den = models.CharField(max_length=255, blank=True, verbose_name="Nơi chuyển đến")
+    ghi_chu_thay_doi = models.TextField(blank=True, verbose_name="Ghi chú thay đổi")
 
     def __str__(self):
         return f"{self.ho_ten} (Hộ {self.ho_gia_dinh.ma_ho})"
@@ -222,6 +241,39 @@ class TamTru(models.Model):
     class Meta: 
         verbose_name_plural = "Đơn Tạm Trú"
         ordering = ['-ngay_tao']
+
+
+class LichSuThayDoiHo(models.Model):
+    """
+    Lưu lịch sử các thay đổi liên quan đến hộ gia đình.
+    Ví dụ: thay đổi chủ hộ, thay đổi địa chỉ, tách hộ, v.v.
+    """
+    LOAI_THAY_DOI = (
+        ('DoiChuHo', 'Đổi chủ hộ'),
+        ('DoiDiaChi', 'Đổi địa chỉ'),
+        ('TachHo', 'Tách hộ'),
+        ('Khac', 'Khác')
+    )
+    
+    ho_gia_dinh = models.ForeignKey(HoGiaDinh, on_delete=models.CASCADE, related_name='lich_su_thay_doi', verbose_name="Hộ gia đình")
+    loai_thay_doi = models.CharField(max_length=20, choices=LOAI_THAY_DOI, verbose_name="Loại thay đổi")
+    noi_dung = models.TextField(verbose_name="Nội dung thay đổi")
+    ngay_thay_doi = models.DateField(verbose_name="Ngày thay đổi")
+    nguoi_thuc_hien = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Người thực hiện (admin)"
+    )
+    ngay_ghi_nhan = models.DateTimeField(auto_now_add=True, verbose_name="Ngày ghi nhận vào hệ thống")
+    
+    def __str__(self):
+        return f"{self.get_loai_thay_doi_display()} - Hộ {self.ho_gia_dinh.ma_ho} - {self.ngay_thay_doi}"
+    
+    class Meta:
+        verbose_name_plural = "Lịch Sử Thay Đổi Hộ"
+        ordering = ['-ngay_thay_doi']
 
 
 class TamVang(models.Model):

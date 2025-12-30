@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+
+{% block title %}Quản lý Hộ khẩu - Hệ thống Quản lý Tổ Dân Phố{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        max-width: 1400px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);
+        color: white;
+        border-radius: 15px;
+    }
+
+    .admin-header h2 {
+        margin: 0;
+        font-size: 28px;
+    }
+
+    .stats-box {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-item {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .stat-item .icon {
+        font-size: 48px;
+    }
+
+    .stat-item .content .number {
+        font-size: 36px;
+        font-weight: 700;
+        color: #EC4899;
+        margin-bottom: 5px;
+    }
+
+    .stat-item .content .label {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .search-box {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .search-box form {
+        display: flex;
+        gap: 10px;
+    }
+
+    .search-box input {
+        flex: 1;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 15px;
+    }
+
+    .search-box input:focus {
+        outline: none;
+        border-color: #EC4899;
+    }
+
+    .search-box button {
+        padding: 12px 30px;
+        background: #EC4899;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .search-box button:hover {
+        background: #DB2777;
+    }
+
+    .ho-list {
+        display: grid;
+        gap: 20px;
+    }
+
+    .ho-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+    }
+
+    .ho-card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+
+    .ho-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .ho-card-header .title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #EC4899;
+        margin-bottom: 5px;
+    }
+
+    .ho-card-header .chu-ho {
+        font-size: 16px;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .ho-card-header .badge {
+        padding: 6px 15px;
+        background: #EC4899;
+        color: white;
+        border-radius: 15px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .ho-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .ho-info-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ho-info-item .label {
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    .ho-info-item .value {
+        font-size: 15px;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .members-preview {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .members-preview .title {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 10px;
+    }
+
+    .member-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .member-tag {
+        padding: 6px 12px;
+        background: #F3F4F6;
+        border-radius: 6px;
+        font-size: 13px;
+        color: #333;
+    }
+
+    .btn-back {
+        display: inline-block;
+        padding: 12px 30px;
+        background: #e0e0e0;
+        color: #666;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s;
+        margin-top: 20px;
+    }
+
+    .btn-back:hover {
+        background: #d0d0d0;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 10px;
+    }
+
+    .empty-state .icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+        color: #666;
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        color: #999;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <div>
+            <h2>🏠 Quản lý Hộ khẩu</h2>
+            <p style="margin: 5px 0 0 0; opacity: 0.9;">Danh sách tất cả hộ gia đình trong tổ dân phố</p>
+        </div>
+    </div>
+
+    <!-- Thống kê -->
+    <div class="stats-box">
+        <div class="stat-item">
+            <div class="icon">🏠</div>
+            <div class="content">
+                <div class="number">{{ tong_so_ho }}</div>
+                <div class="label">Tổng số hộ</div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="icon">👥</div>
+            <div class="content">
+                <div class="number">{{ tong_nhan_khau }}</div>
+                <div class="label">Tổng nhân khẩu thường trú</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tìm kiếm -->
+    <div class="search-box">
+        <form method="get">
+            <input type="text" name="search" placeholder="Tìm kiếm theo mã hộ, chủ hộ, địa chỉ..." value="{{ search }}">
+            <button type="submit">🔍 Tìm kiếm</button>
+        </form>
+    </div>
+
+    <!-- Danh sách hộ -->
+    {% if danh_sach_ho %}
+    <div class="ho-list">
+        {% for ho in danh_sach_ho %}
+        <div class="ho-card">
+            <div class="ho-card-header">
+                <div>
+                    <div class="title">📖 Hộ {{ ho.ma_ho }}</div>
+                    <div class="chu-ho">👤 Chủ hộ: {{ ho.chu_ho.ho_ten }}</div>
+                </div>
+                <div class="badge">{{ ho.thanh_vien_trong_ho.count }} thành viên</div>
+            </div>
+
+            <div class="ho-info">
+                <div class="ho-info-item">
+                    <span class="label">Địa chỉ</span>
+                    <span class="value">{{ ho.dia_chi }}</span>
+                </div>
+                <div class="ho-info-item">
+                    <span class="label">Số CCCD chủ hộ</span>
+                    <span class="value">{{ ho.chu_ho.cccd|default:"Chưa cập nhật" }}</span>
+                </div>
+            </div>
+
+            {% if ho.thanh_vien_trong_ho.all %}
+            <div class="members-preview">
+                <div class="title">Thành viên trong hộ:</div>
+                <div class="member-tags">
+                    {% for tv in ho.thanh_vien_trong_ho.all %}
+                    <span class="member-tag">{{ tv.ho_ten }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">📭</div>
+        <h3>Không tìm thấy hộ khẩu</h3>
+        <p>{% if search %}Không có kết quả cho từ khóa "{{ search }}"{% else %}Chưa có hộ khẩu nào trong hệ thống.{% endif %}</p>
+    </div>
+    {% endif %}
+
+    <div style="text-align: center;">
+        <a href="{% url 'users:dashboard' %}" class="btn-back">← Quay lại Trang chủ</a>
+    </div>
+</div>
+{% endblock %}
