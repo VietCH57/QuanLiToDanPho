@@ -3,12 +3,66 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import User
 
-
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib import messages
+def register_view(request):
+    """
+    Xử lý đăng ký tài khoản mới
+    Username = CCCD
+    """
+    # Nếu đã đăng nhập -> Chuyển hướng sang Dashboard
+    if request.user.is_authenticated:
+        return redirect('users:dashboard')
+    
+    if request.method == 'POST':
+        cccd = request.POST.get('cccd', '').strip()
+        password = request.POST.get('password', '')
+        password_confirm = request.POST.get('password_confirm', '')
+        full_name = request.POST.get('full_name', '').strip()
+        
+        # Validate dữ liệu
+        if not cccd:
+            messages.error(request, 'Vui lòng nhập số CCCD!')
+            return render(request, 'users/register.html')
+        
+        if not password:
+            messages.error(request, 'Vui lòng nhập mật khẩu!')
+            return render(request, 'users/register.html')
+        
+        if len(password) < 6:
+            messages.error(request, 'Mật khẩu phải có ít nhất 6 ký tự!')
+            return render(request, 'users/register.html')
+        
+        if password != password_confirm:
+            messages.error(request, 'Mật khẩu xác nhận không khớp!')
+            return render(request, 'users/register.html')
+        
+        # Kiểm tra CCCD đã tồn tại chưa (kiểm tra cả username và cccd_id trong profile)
+        if User.objects.filter(username=cccd).exists():
+            messages.error(request, 'Số CCCD này đã được đăng ký!')
+            return render(request, 'users/register.html')
+        
+        try:
+            # Tạo user mới với username = CCCD
+            user = User.objects.create_user(
+                username=cccd,
+                password=password
+            )
+            
+            # Cập nhật profile (đã được tạo tự động bởi signal)
+            user.profile.cccd_id = cccd
+            user.profile.full_name = full_name
+            user.profile.role = 'citizen'  # Mặc định là dân cư
+            user.profile.save()
+            
+            messages.success(request, 'Đăng ký thành công! Bạn có thể đăng nhập ngay.')
+            return redirect('users:login')
+            
+        except Exception as e:
+            messages.error(request, f'Có lỗi xảy ra: {str(e)}')
+            return render(request, 'users/register.html')
+    
+    return render(request, 'users/register.html')
 
 def login_view(request):
     """

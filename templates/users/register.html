@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Đăng ký tài khoản - Quản lý Tổ Dân Phố{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-container {
+        max-width: 500px;
+        margin: 60px auto;
+    }
+
+    .register-card {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .register-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .register-header h2 {
+        color: #667eea;
+        font-size: 28px;
+        margin-bottom: 10px;
+    }
+
+    .register-header p {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+    }
+
+    .form-group label .required {
+        color: #ff6b6b;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: all 0.3s;
+        box-sizing: border-box;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-group small {
+        display: block;
+        margin-top: 5px;
+        color: #999;
+        font-size: 13px;
+    }
+
+    .btn-register {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 10px;
+    }
+
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .login-link {
+        text-align: center;
+        margin-top: 20px;
+        color: #666;
+    }
+
+    .login-link a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+
+    .messages {
+        margin-bottom: 20px;
+    }
+
+    .alert {
+        padding: 12px 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+
+    .alert-error {
+        background: #fee;
+        color: #c33;
+        border-left: 4px solid #c33;
+    }
+
+    .alert-success {
+        background: #efe;
+        color: #3c3;
+        border-left: 4px solid #3c3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="register-card">
+        <div class="register-header">
+            <h2>📝 Đăng ký tài khoản</h2>
+            <p>Hệ thống Quản lý Tổ Dân Phố</p>
+        </div>
+
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="cccd">
+                    Số CCCD <span class="required">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="cccd" 
+                    name="cccd" 
+                    placeholder="Nhập số CCCD (12 chữ số)"
+                    required
+                    maxlength="12"
+                    pattern="[0-9]{12}"
+                    title="CCCD phải có 12 chữ số"
+                >
+                <small>Số CCCD sẽ được dùng làm tài khoản đăng nhập</small>
+            </div>
+
+            <div class="form-group">
+                <label for="full_name">
+                    Họ và tên
+                </label>
+                <input 
+                    type="text" 
+                    id="full_name" 
+                    name="full_name" 
+                    placeholder="Nhập họ và tên của bạn"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">
+                    Mật khẩu <span class="required">*</span>
+                </label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+                    required
+                    minlength="6"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password_confirm">
+                    Xác nhận mật khẩu <span class="required">*</span>
+                </label>
+                <input 
+                    type="password" 
+                    id="password_confirm" 
+                    name="password_confirm" 
+                    placeholder="Nhập lại mật khẩu"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="btn-register">
+                Đăng ký
+            </button>
+        </form>
+
+        <div class="login-link">
+            Đã có tài khoản? <a href="{% url 'users:login' %}">Đăng nhập ngay</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Kiểm tra mật khẩu khớp nhau
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const password = document.getElementById('password').value;
+        const passwordConfirm = document.getElementById('password_confirm').value;
+        
+        if (password !== passwordConfirm) {
+            e.preventDefault();
+            alert('Mật khẩu xác nhận không khớp!');
+            return false;
+        }
+    });
+
+    // Chỉ cho phép nhập số cho CCCD
+    document.getElementById('cccd').addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+</script>
+{% endblock %}
