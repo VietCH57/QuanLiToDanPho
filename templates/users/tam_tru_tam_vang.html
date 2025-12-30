@@ -21,24 +21,138 @@
         margin-bottom: 10px;
     }
 
-    .placeholder-content {
-        background: white;
-        padding: 60px;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        text-align: center;
+    .action-cards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+        margin-bottom: 50px;
     }
 
-    .placeholder-icon {
-        font-size: 100px;
+    .action-card {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        text-decoration: none;
+        display: block;
+    }
+
+    .action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .action-card.tam-tru {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+
+    .action-card.tam-vang {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+    }
+
+    .action-card .icon {
+        font-size: 60px;
         margin-bottom: 20px;
+    }
+
+    .action-card h3 {
+        font-size: 24px;
+        margin-bottom: 10px;
+        color: white;
+    }
+
+    .action-card p {
+        font-size: 14px;
+        color: rgba(255,255,255,0.9);
+    }
+
+    .section-title {
+        font-size: 24px;
+        color: #333;
+        margin: 40px 0 20px 0;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #00f2fe;
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    td {
+        padding: 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .badge.cho-duyet {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .badge.da-duyet {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .badge.tu-choi {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+
+    .empty-state .icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+        opacity: 0.3;
     }
 
     .btn-back {
         display: inline-block;
         margin-top: 30px;
         padding: 12px 30px;
-        background: #00f2fe;
+        background: #667eea;
         color: white;
         border-radius: 8px;
         text-decoration: none;
@@ -46,8 +160,22 @@
     }
 
     .btn-back:hover {
-        background: #00d8e8;
+        background: #5568d3;
         transform: translateY(-2px);
+    }
+
+    .btn-detail {
+        padding: 6px 15px;
+        background: #667eea;
+        color: white;
+        border-radius: 5px;
+        text-decoration: none;
+        font-size: 13px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-detail:hover {
+        background: #5568d3;
     }
 </style>
 {% endblock %}
@@ -59,11 +187,119 @@
         <p style="color: #666;">Khai báo tạm trú và tạm vắng</p>
     </div>
 
-    <div class="placeholder-content">
-        <div class="placeholder-icon">🚧</div>
-        <h2 style="color: #333; margin-bottom: 20px;">Trang đang được phát triển</h2>
-        <p style="color: #666; font-size: 18px;">Chức năng khai báo tạm trú - tạm vắng sẽ sớm được cập nhật.</p>
-        
+    {% if not is_manager %}
+    <div class="action-cards">
+        <a href="{% url 'users:khai_bao_tam_tru' %}" class="action-card tam-tru">
+            <div class="icon">📝</div>
+            <h3>Khai báo Tạm trú</h3>
+            <p>Đăng ký tạm trú tại địa phương</p>
+        </a>
+
+        <a href="{% url 'users:khai_bao_tam_vang' %}" class="action-card tam-vang">
+            <div class="icon">✈️</div>
+            <h3>Khai báo Tạm vắng</h3>
+            <p>Thông báo tạm vắng khỏi nơi cư trú</p>
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Danh sách đơn tạm trú -->
+    <h2 class="section-title">📋 Danh sách đơn Tạm trú</h2>
+    <div class="table-container">
+        {% if don_tam_tru %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Họ tên</th>
+                    <th>Nơi tạm trú</th>
+                    <th>Ngày bắt đầu</th>
+                    <th>Ngày tạo đơn</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for don in don_tam_tru %}
+                <tr>
+                    <td>{{ don.ho_ten }}</td>
+                    <td>{{ don.noi_tam_tru|truncatewords:5 }}</td>
+                    <td>{{ don.ngay_bat_dau|default:"Chưa xác định" }}</td>
+                    <td>{{ don.ngay_tao|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        {% if don.trang_thai == 'ChoDuyet' %}
+                            <span class="badge cho-duyet">Chờ duyệt</span>
+                        {% elif don.trang_thai == 'DaDuyet' %}
+                            <span class="badge da-duyet">Đã duyệt</span>
+                        {% else %}
+                            <span class="badge tu-choi">Từ chối</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'users:chi_tiet_tam_tru' don.id %}" class="btn-detail">{% if is_manager %}Chi tiết{% else %}Xem đơn{% endif %}</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon">📭</div>
+            <h3>Chưa có đơn tạm trú</h3>
+            <p>{% if not is_manager %}Bạn chưa có đơn tạm trú nào.{% else %}Chưa có đơn tạm trú nào trong hệ thống.{% endif %}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Danh sách đơn tạm vắng -->
+    <h2 class="section-title">🚀 Danh sách đơn Tạm vắng</h2>
+    <div class="table-container">
+        {% if don_tam_vang %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Họ tên</th>
+                    <th>Nơi đến</th>
+                    <th>Từ ngày</th>
+                    <th>Đến ngày</th>
+                    <th>Ngày tạo đơn</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for don in don_tam_vang %}
+                <tr>
+                    <td>{{ don.ho_ten }}</td>
+                    <td>{{ don.noi_den|truncatewords:5 }}</td>
+                    <td>{{ don.ngay_bat_dau|default:"Chưa xác định" }}</td>
+                    <td>{{ don.ngay_ket_thuc|default:"Chưa xác định" }}</td>
+                    <td>{{ don.ngay_tao|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        {% if don.trang_thai == 'ChoDuyet' %}
+                            <span class="badge cho-duyet">Chờ duyệt</span>
+                        {% elif don.trang_thai == 'DaDuyet' %}
+                            <span class="badge da-duyet">Đã duyệt</span>
+                        {% else %}
+                            <span class="badge tu-choi">Từ chối</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'users:chi_tiet_tam_vang' don.id %}" class="btn-detail">{% if is_manager %}Chi tiết{% else %}Xem đơn{% endif %}</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon">📭</div>
+            <h3>Chưa có đơn tạm vắng</h3>
+            <p>{% if not is_manager %}Bạn chưa có đơn tạm vắng nào.{% else %}Chưa có đơn tạm vắng nào trong hệ thống.{% endif %}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="text-align: center;">
         <a href="{% url 'users:dashboard' %}" class="btn-back">
             ← Quay lại Trang chủ
         </a>

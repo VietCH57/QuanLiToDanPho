@@ -184,16 +184,16 @@ class LichSuPhatThuongAdmin(admin.ModelAdmin):
 
 @admin.register(TamTru)
 class TamTruAdmin(admin.ModelAdmin):
-    list_display = ('thanh_vien', 'dia_chi_tam_tru', 'ngay_bat_dau', 'trang_thai')
+    list_display = ('ho_ten', 'noi_tam_tru', 'ngay_bat_dau', 'trang_thai')
     list_filter = ('trang_thai', 'ngay_bat_dau')
-    search_fields = ('thanh_vien__ho_ten', 'dia_chi_tam_tru')
+    search_fields = ('ho_ten', 'cccd', 'noi_tam_tru')
 
 
 @admin.register(TamVang)
 class TamVangAdmin(admin.ModelAdmin):
-    list_display = ('thanh_vien', 'noi_den', 'ngay_bat_dau', 'trang_thai')
+    list_display = ('ho_ten', 'noi_den', 'ngay_bat_dau', 'trang_thai')
     list_filter = ('trang_thai',)
-    search_fields = ('thanh_vien__ho_ten', 'noi_den')
+    search_fields = ('ho_ten', 'cccd', 'noi_den')
 
 
 # ==========================================================

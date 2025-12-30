@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block title %}Xem trước Đơn Tạm vắng - Hệ thống Quản lý Tổ Dân Phố{% endblock %}
+
+{% block extra_css %}
+<style>
+    .preview-container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+
+    .preview-card {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .preview-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 3px solid #43e97b;
+    }
+
+    .preview-header h2 {
+        color: #333;
+        font-size: 28px;
+        margin-bottom: 10px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #43e97b;
+        margin: 30px 0 15px 0;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .info-item {
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #43e97b;
+    }
+
+    .info-item.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .info-label {
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+
+    .info-value {
+        font-size: 16px;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .warning-box {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+
+    .warning-box p {
+        margin: 0;
+        color: #856404;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 40px;
+        padding-top: 30px;
+        border-top: 2px solid #f0f0f0;
+    }
+
+    .btn {
+        padding: 14px 40px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        border: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(67, 233, 123, 0.4);
+    }
+
+    .btn-secondary {
+        background: #e0e0e0;
+        color: #666;
+    }
+
+    .btn-secondary:hover {
+        background: #d0d0d0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="preview-container">
+    <div class="preview-card">
+        <div class="preview-header">
+            <h2>👁️ Xem trước Đơn Tạm vắng</h2>
+            <p style="color: #666;">Vui lòng kiểm tra kỹ thông tin trước khi gửi</p>
+        </div>
+
+        <div class="warning-box">
+            <p>⚠️ <strong>Lưu ý:</strong> Sau khi gửi đơn, bạn không thể chỉnh sửa thông tin. Vui lòng kiểm tra kỹ trước khi xác nhận.</p>
+        </div>
+
+        <!-- PHẦN 1: Thông tin người đăng ký -->
+        <div class="section-title">📋 Thông tin người đăng ký</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Họ và tên</div>
+                <div class="info-value">{{ data.ho_ten }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Ngày sinh</div>
+                <div class="info-value">{{ data.ngay_sinh }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Giới tính</div>
+                <div class="info-value">{{ data.gioi_tinh }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Số CCCD</div>
+                <div class="info-value">{{ data.cccd }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Số điện thoại</div>
+                <div class="info-value">{{ data.so_dien_thoai|default:"Chưa cung cấp" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Địa chỉ thường trú</div>
+                <div class="info-value">{{ data.dia_chi_thuong_tru }}</div>
+            </div>
+        </div>
+
+        <!-- PHẦN 2: Thông tin tạm vắng -->
+        <div class="section-title">✈️ Thông tin tạm vắng</div>
+        <div class="info-grid">
+            <div class="info-item full-width">
+                <div class="info-label">Địa chỉ nơi đến</div>
+                <div class="info-value">{{ data.noi_den }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Tạm vắng từ ngày</div>
+                <div class="info-value">{{ data.ngay_bat_dau }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Đến ngày</div>
+                <div class="info-value">{{ data.ngay_ket_thuc }}</div>
+            </div>
+            <div class="info-item full-width">
+                <div class="info-label">Lý do tạm vắng</div>
+                <div class="info-value">{{ data.ly_do }}</div>
+            </div>
+        </div>
+
+        <form method="post" action="{% url 'users:gui_don_tam_vang' %}">
+            {% csrf_token %}
+            <div class="form-actions">
+                <a href="{% url 'users:khai_bao_tam_vang' %}" class="btn btn-secondary">⬅️ Quay lại chỉnh sửa</a>
+                <button type="submit" class="btn btn-primary">✅ Xác nhận và gửi đơn</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

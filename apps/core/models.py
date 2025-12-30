@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 # Lấy model User hiện hành của hệ thống (thường là auth.User)
 User = get_user_model()
@@ -180,24 +181,47 @@ class TamTru(models.Model):
     """
     TRANG_THAI_DUYET = (('ChoDuyet', 'Chờ duyệt'), ('DaDuyet', 'Đã duyệt'), ('TuChoi', 'Từ chối'))
 
-    thanh_vien = models.ForeignKey(ThanhVien, on_delete=models.CASCADE, related_name='don_tam_tru', verbose_name="Người đăng ký")
+    # Người đăng ký (nếu là ThanhVien) hoặc người ngoài hệ thống
+    thanh_vien = models.ForeignKey(ThanhVien, on_delete=models.CASCADE, null=True, blank=True, related_name='don_tam_tru', verbose_name="Người đăng ký (nếu có trong hệ thống)")
     
-    # Thông tin chi tiết tờ khai
-    dia_chi_thuong_tru_goc = models.CharField(max_length=255, verbose_name="Đ/C Thường trú gốc")
-    dia_chi_tam_tru = models.CharField(max_length=255, verbose_name="Đ/C Tạm trú tại đây")
-    ly_do = models.TextField(verbose_name="Lý do")
-    ngay_bat_dau = models.DateField(verbose_name="Ngày bắt đầu")
-    ngay_ket_thuc = models.DateField(null=True, blank=True, verbose_name="Ngày kết thúc")
+    # Thông tin người đăng ký (tự động điền hoặc nhập tay)
+    ho_ten = models.CharField(max_length=100, blank=True, verbose_name="Họ tên người đăng ký")
+    ngay_sinh = models.DateField(null=True, blank=True, verbose_name="Ngày sinh")
+    gioi_tinh = models.CharField(max_length=10, blank=True, verbose_name="Giới tính")
+    cccd = models.CharField(max_length=12, blank=True, verbose_name="Số CCCD")
+    so_dien_thoai = models.CharField(max_length=15, blank=True, verbose_name="Số điện thoại")
+    dia_chi_thuong_tru = models.CharField(max_length=255, blank=True, verbose_name="Địa chỉ thường trú")
+    
+    # Thông tin chủ hộ
+    chu_ho_ten = models.CharField(max_length=100, blank=True, verbose_name="Họ tên chủ hộ")
+    chu_ho_cccd = models.CharField(max_length=12, blank=True, verbose_name="Số CCCD chủ hộ")
+    
+    # Thông tin chủ sở hữu chỗ ở hợp pháp
+    chu_so_huu_ten = models.CharField(max_length=100, blank=True, verbose_name="Họ tên chủ sở hữu")
+    chu_so_huu_cccd = models.CharField(max_length=12, blank=True, verbose_name="Số CCCD chủ sở hữu")
+    chu_so_huu_nam_sinh = models.IntegerField(null=True, blank=True, verbose_name="Năm sinh chủ sở hữu")
+    
+    # Thông tin đề nghị tạm trú
+    noi_tam_tru = models.CharField(max_length=255, blank=True, verbose_name="Nơi đề nghị tạm trú")
+    thoi_han_tam_tru = models.CharField(max_length=100, blank=True, verbose_name="Thời hạn tạm trú")
+    moi_quan_he = models.CharField(max_length=100, blank=True, verbose_name="Mối quan hệ với chủ hộ")
+    
+    ngay_bat_dau = models.DateField(null=True, blank=True, verbose_name="Ngày bắt đầu tạm trú")
+    ngay_ket_thuc = models.DateField(null=True, blank=True, verbose_name="Ngày kết thúc tạm trú")
     
     # Quản lý trạng thái duyệt
     trang_thai = models.CharField(max_length=20, choices=TRANG_THAI_DUYET, default='ChoDuyet', verbose_name="Trạng thái")
     ghi_chu_can_bo = models.TextField(blank=True, verbose_name="Ý kiến cán bộ")
+    nguoi_duyet = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Người duyệt")
+    ngay_duyet = models.DateTimeField(null=True, blank=True, verbose_name="Ngày duyệt")
+    ngay_tao = models.DateTimeField(default=timezone.now, verbose_name="Ngày tạo đơn")
 
     def __str__(self):
-        return f"Tạm trú: {self.thanh_vien.ho_ten}"
+        return f"Tạm trú: {self.ho_ten}"
     
     class Meta: 
         verbose_name_plural = "Đơn Tạm Trú"
+        ordering = ['-ngay_tao']
 
 
 class TamVang(models.Model):
@@ -207,20 +231,33 @@ class TamVang(models.Model):
     """
     TRANG_THAI_DUYET = (('ChoDuyet', 'Chờ duyệt'), ('DaDuyet', 'Đã duyệt'), ('TuChoi', 'Từ chối'))
 
-    thanh_vien = models.ForeignKey(ThanhVien, on_delete=models.CASCADE, related_name='don_tam_vang', verbose_name="Người đăng ký")
+    # Người đăng ký
+    thanh_vien = models.ForeignKey(ThanhVien, on_delete=models.CASCADE, null=True, blank=True, related_name='don_tam_vang', verbose_name="Người đăng ký (nếu có trong hệ thống)")
     
-    # Thông tin chi tiết tờ khai
-    noi_den = models.CharField(max_length=255, verbose_name="Nơi chuyển đến")
-    ly_do = models.TextField(verbose_name="Lý do")
-    ngay_bat_dau = models.DateField(verbose_name="Ngày đi")
-    ngay_ket_thuc = models.DateField(null=True, blank=True, verbose_name="Ngày về dự kiến")
+    # Thông tin người đăng ký (tự động điền từ ThanhVien hoặc nhập tay)
+    ho_ten = models.CharField(max_length=100, blank=True, verbose_name="Họ tên người đăng ký")
+    ngay_sinh = models.DateField(null=True, blank=True, verbose_name="Ngày sinh")
+    gioi_tinh = models.CharField(max_length=10, blank=True, verbose_name="Giới tính")
+    cccd = models.CharField(max_length=12, blank=True, verbose_name="Số CCCD")
+    so_dien_thoai = models.CharField(max_length=15, blank=True, verbose_name="Số điện thoại")
+    dia_chi_thuong_tru = models.CharField(max_length=255, blank=True, verbose_name="Địa chỉ thường trú")
+    
+    # Thông tin tạm vắng
+    noi_den = models.CharField(max_length=255, blank=True, verbose_name="Địa chỉ nơi đến")
+    ngay_bat_dau = models.DateField(null=True, blank=True, verbose_name="Tạm vắng từ ngày")
+    ngay_ket_thuc = models.DateField(null=True, blank=True, verbose_name="Đến ngày")
+    ly_do = models.TextField(blank=True, verbose_name="Lý do tạm vắng")
     
     # Quản lý trạng thái duyệt
     trang_thai = models.CharField(max_length=20, choices=TRANG_THAI_DUYET, default='ChoDuyet', verbose_name="Trạng thái")
     ghi_chu_can_bo = models.TextField(blank=True, verbose_name="Ý kiến cán bộ")
+    nguoi_duyet = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Người duyệt")
+    ngay_duyet = models.DateTimeField(null=True, blank=True, verbose_name="Ngày duyệt")
+    ngay_tao = models.DateTimeField(default=timezone.now, verbose_name="Ngày tạo đơn")
 
     def __str__(self):
-        return f"Tạm vắng: {self.thanh_vien.ho_ten}"
+        return f"Tạm vắng: {self.ho_ten}"
     
     class Meta: 
         verbose_name_plural = "Đơn Tạm Vắng"
+        ordering = ['-ngay_tao']

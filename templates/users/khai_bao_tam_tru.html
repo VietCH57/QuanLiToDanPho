@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+
+{% block title %}Khai báo Tạm trú - Hệ thống Quản lý Tổ Dân Phố{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+
+    .form-card {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 3px solid #4facfe;
+    }
+
+    .form-header h2 {
+        color: #333;
+        font-size: 28px;
+        margin-bottom: 10px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #667eea;
+        margin: 30px 0 15px 0;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .form-group label .required {
+        color: #ff6b6b;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: all 0.3s;
+        box-sizing: border-box;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #4facfe;
+        box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+    }
+
+    .form-group input:read-only {
+        background: #f8f9fa;
+        color: #666;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 40px;
+        padding-top: 30px;
+        border-top: 2px solid #f0f0f0;
+    }
+
+    .btn {
+        padding: 14px 40px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        border: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+    }
+
+    .btn-secondary {
+        background: #e0e0e0;
+        color: #666;
+    }
+
+    .btn-secondary:hover {
+        background: #d0d0d0;
+    }
+
+    .alert {
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border-left: 4px solid #28a745;
+    }
+
+    .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border-left: 4px solid #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h2>📝 Đơn đề nghị Tạm trú</h2>
+            <p style="color: #666;">Vui lòng điền đầy đủ thông tin</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- PHẦN 1: Thông tin người đăng ký -->
+            <div class="section-title">📋 Thông tin người đăng ký</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Họ và tên <span class="required">*</span></label>
+                    <input type="text" name="ho_ten" value="{{ thanh_vien.ho_ten|default:user_profile.full_name }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Ngày sinh <span class="required">*</span></label>
+                    <input type="date" name="ngay_sinh" value="{{ thanh_vien.ngay_sinh|date:'Y-m-d' }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Giới tính <span class="required">*</span></label>
+                    <select name="gioi_tinh" required>
+                        <option value="">-- Chọn giới tính --</option>
+                        <option value="Nam" {% if thanh_vien.gioi_tinh == 'Nam' %}selected{% endif %}>Nam</option>
+                        <option value="Nu" {% if thanh_vien.gioi_tinh == 'Nu' %}selected{% endif %}>Nữ</option>
+                        <option value="Khac">Khác</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Số CCCD <span class="required">*</span></label>
+                    <input type="text" name="cccd" value="{{ user_profile.cccd_id }}" readonly>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Số điện thoại</label>
+                    <input type="tel" name="so_dien_thoai" placeholder="0123456789">
+                </div>
+                <div class="form-group">
+                    <label>Địa chỉ thường trú <span class="required">*</span></label>
+                    <input type="text" name="dia_chi_thuong_tru" value="{{ thanh_vien.ho_gia_dinh.dia_chi|default:'' }}" required>
+                </div>
+            </div>
+
+            <!-- PHẦN 2: Thông tin chủ hộ -->
+            <div class="section-title">👤 Thông tin chủ hộ</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Họ tên chủ hộ <span class="required">*</span></label>
+                    <input type="text" name="chu_ho_ten" required>
+                </div>
+                <div class="form-group">
+                    <label>Số CCCD chủ hộ <span class="required">*</span></label>
+                    <input type="text" name="chu_ho_cccd" maxlength="12" pattern="[0-9]{12}" required>
+                </div>
+            </div>
+
+            <!-- PHẦN 3: Thông tin chủ sở hữu chỗ ở -->
+            <div class="section-title">🏠 Thông tin chủ sở hữu chỗ ở hợp pháp</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Họ tên chủ sở hữu <span class="required">*</span></label>
+                    <input type="text" name="chu_so_huu_ten" required>
+                </div>
+                <div class="form-group">
+                    <label>Số CCCD chủ sở hữu <span class="required">*</span></label>
+                    <input type="text" name="chu_so_huu_cccd" maxlength="12" pattern="[0-9]{12}" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Năm sinh chủ sở hữu <span class="required">*</span></label>
+                    <input type="number" name="chu_so_huu_nam_sinh" min="1900" max="2025" required>
+                </div>
+            </div>
+
+            <!-- PHẦN 4: Thông tin đề nghị tạm trú -->
+            <div class="section-title">📍 Thông tin đề nghị tạm trú</div>
+            <div class="form-group full-width">
+                <label>Nơi đề nghị tạm trú (Địa chỉ) <span class="required">*</span></label>
+                <input type="text" name="noi_tam_tru" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Thời hạn tạm trú <span class="required">*</span></label>
+                    <input type="text" name="thoi_han_tam_tru" placeholder="VD: 6 tháng, 1 năm..." required>
+                </div>
+                <div class="form-group">
+                    <label>Mối quan hệ với chủ hộ <span class="required">*</span></label>
+                    <input type="text" name="moi_quan_he" placeholder="VD: Bạn bè, người thuê..." required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Từ ngày <span class="required">*</span></label>
+                    <input type="date" name="ngay_bat_dau" required>
+                </div>
+                <div class="form-group">
+                    <label>Đến ngày</label>
+                    <input type="date" name="ngay_ket_thuc">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'users:tam_tru_tam_vang' %}" class="btn btn-secondary">Hủy bỏ</a>
+                <button type="submit" class="btn btn-primary">Tiếp tục ➡️</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
