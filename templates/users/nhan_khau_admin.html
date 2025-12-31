@@ -254,7 +254,7 @@
 <div class="admin-container">
     <div class="admin-header">
         <div>
-            <h2>👥 Quản lý Nhân khẩu</h2>
+            <h2>Quản lý Nhân khẩu</h2>
             <p style="margin: 5px 0 0 0; opacity: 0.9;">Danh sách tất cả nhân khẩu trong tổ dân phố</p>
         </div>
         <div style="display: flex; gap: 10px;">
@@ -316,8 +316,8 @@
                     <td>
                         <div class="actions-cell">
                             <a href="{% url 'users:lich_su_nhan_khau' nk.id %}" class="btn btn-view" title="Xem lịch sử">📋</a>
-                            <a href="{% url 'users:admin_sua_nhan_khau' nk.id %}" class="btn btn-edit">✏️</a>
-                            <a href="{% url 'users:admin_xoa_nhan_khau' nk.id %}" class="btn btn-delete">🗑️</a>
+                            <a href="{% url 'users:admin_sua_nhan_khau' nk.id %}" class="btn btn-edit" title="Chỉnh sửa">✏️</a>
+                            <a href="{% url 'users:admin_xoa_nhan_khau' nk.id %}" class="btn btn-delete" title="Xóa">🗑️</a>
                         </div>
                     </td>
                 </tr>
