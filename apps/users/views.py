@@ -61,12 +61,17 @@ def admin_tach_ho(request, ho_id):
     thanh_vien_trong_ho = ho.thanh_vien_trong_ho.all()
     if request.method == 'POST':
         ids = request.POST.getlist('tach_ids')
+        chu_ho_moi_id = request.POST.get('chu_ho_moi')
+        ma_ho_moi = request.POST.get('ma_ho_moi')
+        dia_chi_moi = request.POST.get('dia_chi_moi')
         if not ids:
             messages.error(request, 'Vui lòng chọn ít nhất một nhân khẩu để tách!')
+        elif not chu_ho_moi_id or chu_ho_moi_id not in ids:
+            messages.error(request, 'Vui lòng chọn chủ hộ mới là một trong các thành viên được tách!')
+        elif HoGiaDinh.objects.filter(ma_ho=ma_ho_moi).exists():
+            messages.error(request, f"Mã hộ '{ma_ho_moi}' đã tồn tại. Vui lòng chọn mã khác!")
         else:
-            # Tạo hộ mới
-            ma_ho_moi = request.POST.get('ma_ho_moi')
-            dia_chi_moi = request.POST.get('dia_chi_moi')
+            # Tạo hộ mới với chủ hộ là người được chọn
             ho_moi = HoGiaDinh.objects.create(ma_ho=ma_ho_moi, dia_chi=dia_chi_moi)
             
             # Lấy danh sách thành viên sẽ chuyển
@@ -76,8 +81,12 @@ def admin_tach_ho(request, ho_id):
             from apps.core.models import LichSuThayDoiThanhVien
             for tv in thanh_vien_chuyen:
                 tv.ho_gia_dinh = ho_moi
+                # Đặt chủ hộ mới
+                if str(tv.id) == str(chu_ho_moi_id):
+                    tv.la_chu_ho = True
+                else:
+                    tv.la_chu_ho = False
                 tv.save()
-                
                 # Lưu lịch sử cho nhân khẩu
                 LichSuThayDoiThanhVien.objects.create(
                     thanh_vien=tv,
@@ -86,7 +95,9 @@ def admin_tach_ho(request, ho_id):
                     ngay_thay_doi=date.today(),
                     nguoi_thuc_hien=request.user
                 )
-            
+            # Gán chủ hộ cho hộ mới
+            ho_moi.chu_ho_id = chu_ho_moi_id
+            ho_moi.save()
             # Ghi lịch sử cho hộ cũ
             LichSuThayDoiHo.objects.create(
                 ho_gia_dinh=ho,
@@ -95,7 +106,6 @@ def admin_tach_ho(request, ho_id):
                 ngay_thay_doi=date.today(),
                 nguoi_thuc_hien=request.user
             )
-            
             # Ghi lịch sử cho hộ mới
             LichSuThayDoiHo.objects.create(
                 ho_gia_dinh=ho_moi,
@@ -104,7 +114,6 @@ def admin_tach_ho(request, ho_id):
                 ngay_thay_doi=date.today(),
                 nguoi_thuc_hien=request.user
             )
-            
             messages.success(request, f'Đã tách hộ thành công!')
             return redirect('users:ho_khau')
     return render(request, 'users/admin_tach_ho.html', {'ho': ho, 'thanh_vien_trong_ho': thanh_vien_trong_ho})

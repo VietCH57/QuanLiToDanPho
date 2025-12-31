@@ -296,6 +296,16 @@
                 <label>Địa chỉ mới <span style="color: #EF4444;">*</span></label>
                 <input type="text" name="dia_chi_moi" required placeholder="VD: 123 Đường ABC, Phường XYZ">
             </div>
+            <div class="form-group">
+                <label>Chọn chủ hộ mới <span style="color: #EF4444;">*</span></label>
+                <select name="chu_ho_moi" id="chu_ho_moi" required>
+                    <option value="">-- Chọn chủ hộ mới --</option>
+                    {% for tv in thanh_vien_trong_ho %}
+                        <option value="{{ tv.id }}">{{ tv.ho_ten }} ({{ tv.ngay_sinh|date:"d/m/Y" }})</option>
+                    {% endfor %}
+                </select>
+                <small>Chỉ các thành viên được chọn tách mới có thể làm chủ hộ mới.</small>
+            </div>
         </div>
 
         <!-- Danh sách thành viên -->
