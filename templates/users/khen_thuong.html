@@ -121,7 +121,7 @@
     </div>
 
     <div class="card-grid">
-        {% if request.user.profile.role in 'admin,citizenship_manager' %}
+        {% if request.user.profile.role == 'admin' or request.user.profile.role == 'citizenship_manager' %}
         <a href="{% url 'users:admin_quan_ly_phan_thuong' %}" class="feature-card admin">
             <div class="feature-icon">🎁</div>
             <h3>Quản lý phần thưởng</h3>

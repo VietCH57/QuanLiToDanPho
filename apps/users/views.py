@@ -818,8 +818,11 @@ def admin_quan_ly_phan_thuong(request):
     if not request.user.profile.role in ['admin', 'citizenship_manager']:
         return HttpResponseForbidden()
     
-    from apps.core.models import LichSuPhatThuong, ThongTinHocTap, DanhMucPhanThuong
+    from apps.core.models import LichSuPhatThuong, ThongTinHocTap, DanhMucPhanThuong, DotPhatThuong
     from django.db.models import Sum, Count
+    
+    # Lấy danh sách đợt phát thưởng
+    dot_phat_list = DotPhatThuong.objects.all().order_by('-ngay_tao')
     
     # Lấy danh sách lịch sử phát thưởng
     lich_su_list = LichSuPhatThuong.objects.select_related(
@@ -829,7 +832,7 @@ def admin_quan_ly_phan_thuong(request):
     # Lấy danh sách thành tích chờ duyệt
     thanh_tich_list = ThongTinHocTap.objects.filter(
         trang_thai='ChoDuyet'
-    ).select_related('thanh_vien', 'nguoi_tao').order_by('-ngay_tao')
+    ).select_related('thanh_vien', 'nguoi_tao', 'dot_phat_thuong').order_by('-ngay_tao')
     
     # Lấy danh mục phần thưởng
     danh_muc_list = DanhMucPhanThuong.objects.all()
@@ -844,6 +847,7 @@ def admin_quan_ly_phan_thuong(request):
     approved_count = ThongTinHocTap.objects.filter(trang_thai='DaDuyet').count()
     
     context = {
+        'dot_phat_list': dot_phat_list,
         'lich_su_list': lich_su_list,
         'thanh_tich_list': thanh_tich_list,
         'danh_muc_list': danh_muc_list,
@@ -998,7 +1002,7 @@ def thanh_tich_hoc_tap_view(request):
     if not hasattr(request.user, 'profile'):
         return HttpResponseForbidden()
     
-    from apps.core.models import ThongTinHocTap, ThanhVien
+    from apps.core.models import ThongTinHocTap, ThanhVien, DotPhatThuong
     
     # Tìm thành viên tương ứng với user
     try:
@@ -1010,11 +1014,15 @@ def thanh_tich_hoc_tap_view(request):
     # Lấy danh sách thành tích của thành viên này
     thanh_tich_list = ThongTinHocTap.objects.filter(
         thanh_vien=thanh_vien
-    ).order_by('-ngay_tao')
+    ).select_related('dot_phat_thuong').order_by('-ngay_tao')
+    
+    # Lấy các đợt phát thưởng đang mở
+    dot_dang_mo = DotPhatThuong.objects.filter(trang_thai='DangMo').order_by('-ngay_tao')
     
     context = {
         'thanh_tich_list': thanh_tich_list,
         'thanh_vien': thanh_vien,
+        'dot_dang_mo': dot_dang_mo,
     }
     
     return render(request, 'users/thanh_tich_hoc_tap.html', context)
@@ -1025,22 +1033,30 @@ def gui_thanh_tich(request):
     if request.method != 'POST':
         return redirect('users:thanh_tich_hoc_tap')
     
-    from apps.core.models import ThongTinHocTap, ThanhVien
+    from apps.core.models import ThongTinHocTap, ThanhVien, DotPhatThuong
     
     try:
         thanh_vien = ThanhVien.objects.get(cccd=request.user.username)
         
+        dot_phat_thuong_id = request.POST.get('dot_phat_thuong_id')
         nam_hoc = request.POST.get('nam_hoc')
         truong = request.POST.get('truong')
         lop = request.POST.get('lop')
         thanh_tich = request.POST.get('thanh_tich')
         minh_chung = request.FILES.get('minh_chung')
         
-        if not all([nam_hoc, truong, lop, thanh_tich, minh_chung]):
+        if not all([dot_phat_thuong_id, nam_hoc, truong, lop, thanh_tich, minh_chung]):
             messages.error(request, 'Vui lòng điền đầy đủ thông tin!')
             return redirect('users:thanh_tich_hoc_tap')
         
+        # Kiểm tra đợt còn mở không
+        dot = DotPhatThuong.objects.get(id=dot_phat_thuong_id)
+        if dot.trang_thai != 'DangMo':
+            messages.error(request, 'Đợt phát thưởng này đã đóng, không thể nộp hồ sơ!')
+            return redirect('users:thanh_tich_hoc_tap')
+        
         ThongTinHocTap.objects.create(
+            dot_phat_thuong=dot,
             thanh_vien=thanh_vien,
             nam_hoc=nam_hoc,
             truong=truong,
@@ -1054,6 +1070,8 @@ def gui_thanh_tich(request):
     
     except ThanhVien.DoesNotExist:
         messages.error(request, 'Không tìm thấy thông tin nhân khẩu của bạn!')
+    except DotPhatThuong.DoesNotExist:
+        messages.error(request, 'Đợt phát thưởng không tồn tại!')
     except Exception as e:
         messages.error(request, f'Có lỗi xảy ra: {str(e)}')
     
@@ -1095,3 +1113,73 @@ def phan_thuong_cua_toi(request):
     }
     
     return render(request, 'users/phan_thuong_cua_toi.html', context)
+
+
+# --- ADMIN: Quản lý đợt phát thưởng ---
+@login_required
+def tao_dot_phat_thuong_moi(request):
+    """Tạo đợt phát thưởng mới"""
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    
+    if request.method != 'POST':
+        return redirect('users:admin_quan_ly_phan_thuong')
+    
+    from apps.core.models import DotPhatThuong
+    
+    try:
+        ten_dot = request.POST.get('ten_dot')
+        nam_hoc = request.POST.get('nam_hoc')
+        mo_ta = request.POST.get('mo_ta', '')
+        ngay_bat_dau = request.POST.get('ngay_bat_dau')
+        ngay_ket_thuc = request.POST.get('ngay_ket_thuc')
+        
+        if not all([ten_dot, nam_hoc, ngay_bat_dau, ngay_ket_thuc]):
+            messages.error(request, 'Vui lòng điền đầy đủ thông tin!')
+            return redirect('users:admin_quan_ly_phan_thuong')
+        
+        DotPhatThuong.objects.create(
+            ten_dot=ten_dot,
+            nam_hoc=nam_hoc,
+            mo_ta=mo_ta,
+            ngay_bat_dau=ngay_bat_dau,
+            ngay_ket_thuc=ngay_ket_thuc,
+            nguoi_tao=request.user
+        )
+        
+        messages.success(request, f'Đã tạo đợt phát thưởng "{ten_dot}" thành công!')
+    
+    except Exception as e:
+        messages.error(request, f'Có lỗi xảy ra: {str(e)}')
+    
+    return redirect('users:admin_quan_ly_phan_thuong')
+
+
+@login_required
+def cap_nhat_trang_thai_dot(request, dot_id):
+    """Cập nhật trạng thái đợt phát thưởng"""
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    
+    if request.method != 'POST':
+        return redirect('users:admin_quan_ly_phan_thuong')
+    
+    from apps.core.models import DotPhatThuong
+    
+    try:
+        dot = DotPhatThuong.objects.get(id=dot_id)
+        trang_thai_moi = request.POST.get('trang_thai')
+        
+        if trang_thai_moi in ['DangMo', 'DaDong', 'DangPhat', 'HoanThanh']:
+            dot.trang_thai = trang_thai_moi
+            dot.save()
+            messages.success(request, f'Đã cập nhật trạng thái đợt "{dot.ten_dot}"!')
+        else:
+            messages.error(request, 'Trạng thái không hợp lệ!')
+    
+    except DotPhatThuong.DoesNotExist:
+        messages.error(request, 'Đợt phát thưởng không tồn tại!')
+    except Exception as e:
+        messages.error(request, f'Có lỗi xảy ra: {str(e)}')
+    
+    return redirect('users:admin_quan_ly_phan_thuong')

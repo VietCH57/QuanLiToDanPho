@@ -324,10 +324,35 @@
         {% endfor %}
     {% endif %}
 
+    {% if dot_dang_mo %}
+    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+        <h3 style="color: #856404; margin-bottom: 15px;">📢 Thông báo các đợt phát thưởng đang mở</h3>
+        {% for dot in dot_dang_mo %}
+        <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+            <strong style="font-size: 16px; color: #333;">{{ dot.ten_dot }}</strong><br>
+            <span style="color: #666;">
+                📅 Hạn nộp: {{ dot.ngay_ket_thuc|date:"d/m/Y" }} | 
+                📚 Năm học: {{ dot.nam_hoc }}
+            </span>
+            {% if dot.mo_ta %}
+            <p style="margin: 10px 0 0 0; color: #666;">{{ dot.mo_ta }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="background: #f8d7da; border-left: 4px solid #dc3545; padding: 20px; border-radius: 8px; margin-bottom: 30px; color: #721c24;">
+        <strong>⚠️ Hiện không có đợt phát thưởng nào đang mở.</strong><br>
+        Vui lòng chờ cán bộ tạo đợt phát thưởng mới.
+    </div>
+    {% endif %}
+
     <div class="action-buttons">
+        {% if dot_dang_mo %}
         <button class="btn-action btn-add" onclick="openAddModal()">
             ➕ Khai báo thành tích mới
         </button>
+        {% endif %}
     </div>
 
     {% if thanh_tich_list %}
@@ -345,6 +370,10 @@
                         <span class="card-badge badge-rejected">❌ Từ chối</span>
                     {% endif %}
                 </div>
+            </div>
+
+            <div class="card-info" style="background: #e3f2fd; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+                <strong>Đợt phát thưởng:</strong> {{ tt.dot_phat_thuong.ten_dot }}
             </div>
 
             <div class="card-info">
@@ -408,6 +437,17 @@
 
         <form method="POST" action="{% url 'users:gui_thanh_tich' %}" enctype="multipart/form-data">
             {% csrf_token %}
+
+            <div class="form-group">
+                <label>Chọn đợt phát thưởng <span style="color: red;">*</span></label>
+                <select name="dot_phat_thuong_id" class="form-select" required>
+                    <option value="">-- Chọn đợt phát thưởng --</option>
+                    {% for dot in dot_dang_mo %}
+                    <option value="{{ dot.id }}">{{ dot.ten_dot }} ({{ dot.nam_hoc }})</option>
+                    {% endfor %}
+                </select>
+                <div class="help-text">Chọn đợt phát thưởng phù hợp với năm học của bạn</div>
+            </div>
 
             <div class="form-group">
                 <label>Năm học <span style="color: red;">*</span></label>

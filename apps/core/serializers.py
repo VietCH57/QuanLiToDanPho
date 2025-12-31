@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
     HoGiaDinh, ThanhVien, DanhMucPhanThuong, 
-    LichSuPhatThuong, TamTru, TamVang, ThongTinHocTap
+    LichSuPhatThuong, TamTru, TamVang, ThongTinHocTap, DotPhatThuong
 )
 from apps.users.models import UserProfile
 
@@ -67,16 +67,34 @@ class HoGiaDinhSerializer(serializers.ModelSerializer):
 #  NHÓM 2: QUẢN LÝ KHEN THƯỞNG
 # ==========================================================
 
+class DotPhatThuongSerializer(serializers.ModelSerializer):
+    """Serializer cho đợt phát thưởng"""
+    ten_nguoi_tao = serializers.CharField(source='nguoi_tao.get_full_name', read_only=True)
+    ten_trang_thai = serializers.CharField(source='get_trang_thai_display', read_only=True)
+    so_ho_so = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = DotPhatThuong
+        fields = '__all__'
+        read_only_fields = ['id', 'ngay_tao', 'nguoi_tao']
+    
+    def get_so_ho_so(self, obj):
+        """Đếm số hồ sơ thành tích đã nộp trong đợt này"""
+        return obj.danh_sach_thanh_tich.count()
+
+
 class ThongTinHocTapSerializer(serializers.ModelSerializer):
     """Serializer cho thông tin học tập"""
     ten_thanh_vien = serializers.CharField(source='thanh_vien.ho_ten', read_only=True)
     ten_thanh_tich = serializers.CharField(source='get_thanh_tich_display', read_only=True)
     ten_trang_thai = serializers.CharField(source='get_trang_thai_display', read_only=True)
+    ten_dot_phat_thuong = serializers.CharField(source='dot_phat_thuong.ten_dot', read_only=True)
     
     class Meta:
         model = ThongTinHocTap
         fields = [
-            'id', 'thanh_vien', 'ten_thanh_vien', 
+            'id', 'dot_phat_thuong', 'ten_dot_phat_thuong',
+            'thanh_vien', 'ten_thanh_vien', 
             'nam_hoc', 'truong', 'lop', 
             'thanh_tich', 'ten_thanh_tich',
             'minh_chung', 'trang_thai', 'ten_trang_thai',

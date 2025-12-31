@@ -152,6 +152,39 @@ class DanhMucPhanThuong(models.Model):
         verbose_name_plural = "Danh Mục Phần Thưởng"
 
 
+class DotPhatThuong(models.Model):
+    """
+    Quản lý các đợt phát thưởng học tập.
+    Cán bộ tạo đợt trước, người dân chọn đợt khi khai báo thành tích.
+    """
+    TRANG_THAI_DOT = (
+        ('DangMo', 'Đang mở - Nhận hồ sơ'),
+        ('DaDong', 'Đã đóng - Không nhận thêm'),
+        ('DangPhat', 'Đang phát thưởng'),
+        ('HoanThanh', 'Hoàn thành')
+    )
+    
+    ten_dot = models.CharField(max_length=200, verbose_name="Tên đợt phát thưởng")
+    nam_hoc = models.CharField(max_length=20, verbose_name="Năm học (VD: 2024-2025)")
+    mo_ta = models.TextField(blank=True, verbose_name="Mô tả chi tiết")
+    
+    ngay_bat_dau = models.DateField(verbose_name="Ngày bắt đầu nhận hồ sơ")
+    ngay_ket_thuc = models.DateField(verbose_name="Ngày kết thúc nhận hồ sơ")
+    
+    trang_thai = models.CharField(max_length=20, choices=TRANG_THAI_DOT, default='DangMo', verbose_name="Trạng thái")
+    
+    # Metadata
+    ngay_tao = models.DateTimeField(auto_now_add=True, verbose_name="Ngày tạo")
+    nguoi_tao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='tao_dot_phat_thuong', verbose_name="Người tạo")
+    
+    def __str__(self):
+        return f"{self.ten_dot} ({self.nam_hoc})"
+    
+    class Meta:
+        verbose_name_plural = "Đợt Phát Thưởng"
+        ordering = ['-ngay_tao']
+
+
 class ThongTinHocTap(models.Model):
     """
     Lưu thông tin học tập của học sinh để cấp phần thưởng.
@@ -169,6 +202,9 @@ class ThongTinHocTap(models.Model):
         ('DaDuyet', 'Đã duyệt'),
         ('TuChoi', 'Từ chối')
     )
+    
+    # Liên kết với đợt phát thưởng
+    dot_phat_thuong = models.ForeignKey(DotPhatThuong, on_delete=models.CASCADE, null=True, blank=True, related_name='danh_sach_thanh_tich', verbose_name="Đợt phát thưởng")
     
     thanh_vien = models.ForeignKey(ThanhVien, on_delete=models.CASCADE, related_name='thong_tin_hoc_tap', verbose_name="Học sinh")
     nam_hoc = models.CharField(max_length=20, verbose_name="Năm học (VD: 2024-2025)")
