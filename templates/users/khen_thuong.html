@@ -29,76 +29,73 @@
     }
 
     .feature-card {
-        background: white;
-        padding: 30px;
+        padding: 40px;
         border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         text-align: center;
-        transition: all 0.3s ease;
         cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         text-decoration: none;
         display: block;
-        border: 3px solid transparent;
+        border: none;
+        margin-bottom: 0;
     }
 
     .feature-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
     }
 
     .feature-card.admin {
-        border-color: #667eea;
-    }
-
-    .feature-card.admin:hover {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    .feature-card.admin:hover {
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
         color: white;
     }
 
     .feature-card.citizen {
-        border-color: #43e97b;
-    }
-
-    .feature-card.citizen:hover {
         background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+    }
+    .feature-card.citizen:hover {
+        background: linear-gradient(135deg, #2ecc71 0%, #27e6b6 100%);
         color: white;
     }
 
     .feature-card.gift {
-        border-color: #f093fb;
-    }
-
-    .feature-card.gift:hover {
         background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+    .feature-card.gift:hover {
+        background: linear-gradient(135deg, #e040fb 0%, #f5576c 100%);
         color: white;
     }
 
     .feature-icon {
         font-size: 60px;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
+        color: white;
     }
 
     .feature-card h3 {
-        font-size: 22px;
+        font-size: 24px;
         margin-bottom: 10px;
-        color: inherit;
+        color: white;
     }
 
     .feature-card p {
         font-size: 14px;
-        color: #666;
+        color: rgba(255,255,255,0.9);
         margin: 0;
-    }
-
-    .feature-card:hover p {
-        color: rgba(255, 255, 255, 0.9);
     }
 
     .btn-back {
         display: inline-block;
         margin-top: 30px;
         padding: 12px 30px;
-        background: #12c2a2;
+        background: #764ba2;
         color: white;
         border-radius: 8px;
         text-decoration: none;
@@ -107,7 +104,7 @@
     }
 
     .btn-back:hover {
-        background: #0fa58a;
+        background: #667eea;
         transform: translateY(-2px);
     }
 </style>
