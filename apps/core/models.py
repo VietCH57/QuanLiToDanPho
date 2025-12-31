@@ -48,7 +48,12 @@ class ThanhVien(models.Model):
     """
     # Các lựa chọn cố định (Choices) giúp chuẩn hóa dữ liệu đầu vào
     GIOI_TINH = (('Nam', 'Nam'), ('Nu', 'Nữ'), ('Khac', 'Khác'))
-    TRANG_THAI = (('ThuongTru', 'Thường trú'), ('TamTru', 'Tạm trú'), ('ChuyenDi', 'Chuyển đi'))
+    TRANG_THAI = (
+        ('ThuongTru', 'Thường trú'),
+        ('TamTru', 'Tạm trú'),
+        ('ChuyenDi', 'Chuyển đi'),
+        ('DaQuaDoi', 'Đã qua đời'),
+    )
 
     # --- KHÓA NGOẠI & LIÊN KẾT ---
     # Liên kết với User: Cho phép người dân đăng nhập (nếu có tài khoản)
@@ -94,7 +99,8 @@ class ThanhVien(models.Model):
     
     # --- THÔNG TIN CHUYỂN ĐI / QUA ĐỜI ---
     ngay_chuyen_di = models.DateField(blank=True, null=True, verbose_name="Ngày chuyển đi")
-    noi_chuyen_den = models.CharField(max_length=255, blank=True, verbose_name="Nơi chuyển đến")
+    dia_chi_chuyen_di = models.CharField(max_length=255, blank=True, verbose_name="Địa chỉ chuyển đi")
+    ngay_qua_doi = models.DateField(blank=True, null=True, verbose_name="Ngày qua đời")
     ghi_chu_thay_doi = models.TextField(blank=True, verbose_name="Ghi chú thay đổi")
 
     def __str__(self):

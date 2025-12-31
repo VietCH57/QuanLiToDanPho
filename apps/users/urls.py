@@ -34,6 +34,7 @@ urlpatterns = [
     # Admin tách hộ
     path('admin/ho-khau/tach/<int:ho_id>/', views.admin_tach_ho, name='admin_tach_ho'),
     path('admin/ho-khau/them/', views.admin_them_ho_khau, name='admin_them_ho_khau'),
+    path('admin/ho-khau/xoa/<int:ho_id>/', views.admin_xoa_ho_khau, name='admin_xoa_ho_khau'),
     # Admin quản lý phần thưởng
     path('admin/phan-thuong/tao-dot-moi/', views.tao_dot_phat_thuong_moi, name='tao_dot_phat_thuong_moi'),
     path('admin/phan-thuong/cap-nhat-dot/<int:dot_id>/', views.cap_nhat_trang_thai_dot, name='cap_nhat_trang_thai_dot'),

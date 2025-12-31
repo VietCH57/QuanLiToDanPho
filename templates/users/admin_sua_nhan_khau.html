@@ -267,6 +267,40 @@
                     {{ form.dia_chi_truoc_chuyen_den }}
                 </div>
             </div>
+            <div class="form-grid" id="chuyen-di-fields" style="display:none;">
+                <div class="form-group">
+                    <label>Ngày chuyển đi</label>
+                    {{ form.ngay_chuyen_di }}
+                </div>
+                <div class="form-group">
+                    <label>Địa chỉ chuyển đi</label>
+                    {{ form.dia_chi_chuyen_di }}
+                </div>
+            </div>
+            <div class="form-grid" id="qua-doi-fields" style="display:none;">
+                <div class="form-group">
+                    <label>Ngày qua đời</label>
+                    {{ form.ngay_qua_doi }}
+                </div>
+            </div>
+            <script>
+            function toggleFields() {
+                var trangThai = document.querySelector('[name="trang_thai"]');
+                var chuyenDi = document.getElementById('chuyen-di-fields');
+                var quaDoi = document.getElementById('qua-doi-fields');
+                if (!trangThai) return;
+                var value = trangThai.value;
+                chuyenDi.style.display = value === 'ChuyenDi' ? '' : 'none';
+                quaDoi.style.display = value === 'DaQuaDoi' ? '' : 'none';
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+                var trangThai = document.querySelector('[name="trang_thai"]');
+                if (trangThai) {
+                    trangThai.addEventListener('change', toggleFields);
+                    toggleFields();
+                }
+            });
+            </script>
         </div>
 
         <!-- Vai trò trong hộ -->

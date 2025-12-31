@@ -313,7 +313,8 @@
             <div style="margin-top: 15px; text-align: right;">
                 <a href="{% url 'users:chi_tiet_ho_khau_view' ho.id %}" class="btn" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px; margin-right: 10px;">👁️ Xem chi tiết</a>
                 <a href="{% url 'users:lich_su_ho_khau' ho.id %}" class="btn" style="background: #667eea; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px; margin-right: 10px;">📋 Xem lịch sử</a>
-                <a href="{% url 'users:admin_tach_ho' ho.id %}" class="btn" style="background: #EC4899; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px;">🔀 Tách hộ</a>
+                <a href="{% url 'users:admin_tach_ho' ho.id %}" class="btn" style="background: #EC4899; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px; margin-right: 10px;">🔀 Tách hộ</a>
+                <a href="{% url 'users:admin_xoa_ho_khau' ho.id %}" class="btn" style="background: #EF4444; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px;">🗑️ Xóa hộ khẩu</a>
             </div>
         </div>
         {% endfor %}

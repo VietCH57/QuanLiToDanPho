@@ -117,7 +117,7 @@ def admin_tach_ho(request, ho_id):
             messages.success(request, f'Đã tách hộ thành công!')
             return redirect('users:ho_khau')
     return render(request, 'users/admin_tach_ho.html', {'ho': ho, 'thanh_vien_trong_ho': thanh_vien_trong_ho})
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -768,14 +768,19 @@ from django import forms
 class ThanhVienForm(forms.ModelForm):
     class Meta:
         model = ThanhVien
-        fields = ['ho_gia_dinh', 'ho_ten', 'bi_danh', 'cccd', 'ngay_sinh', 'noi_sinh', 
-                  'nguyen_quan', 'dan_toc', 'gioi_tinh', 'nghe_nghiep', 'noi_lam_viec', 
-                  'ngay_cap_cccd', 'noi_cap_cccd', 'ngay_dang_ky_thuong_tru', 
-                  'dia_chi_truoc_chuyen_den', 'la_chu_ho', 'quan_he_chu_ho', 'trang_thai']
+        fields = [
+            'ho_gia_dinh', 'ho_ten', 'bi_danh', 'cccd', 'ngay_sinh', 'noi_sinh', 
+            'nguyen_quan', 'dan_toc', 'gioi_tinh', 'nghe_nghiep', 'noi_lam_viec', 
+            'ngay_cap_cccd', 'noi_cap_cccd', 'ngay_dang_ky_thuong_tru', 
+            'dia_chi_truoc_chuyen_den', 'la_chu_ho', 'quan_he_chu_ho', 'trang_thai',
+            'ngay_chuyen_di', 'dia_chi_chuyen_di', 'ngay_qua_doi'
+        ]
         widgets = {
             'ngay_sinh': forms.DateInput(attrs={'type': 'date'}),
             'ngay_cap_cccd': forms.DateInput(attrs={'type': 'date'}),
             'ngay_dang_ky_thuong_tru': forms.DateInput(attrs={'type': 'date'}),
+            'ngay_chuyen_di': forms.DateInput(attrs={'type': 'date'}),
+            'ngay_qua_doi': forms.DateInput(attrs={'type': 'date'}),
             'ho_gia_dinh': forms.Select(attrs={'class': 'form-control'}),
             'ho_ten': forms.TextInput(attrs={'class': 'form-control'}),
             'bi_danh': forms.TextInput(attrs={'class': 'form-control'}),
@@ -788,6 +793,7 @@ class ThanhVienForm(forms.ModelForm):
             'noi_lam_viec': forms.TextInput(attrs={'class': 'form-control'}),
             'noi_cap_cccd': forms.TextInput(attrs={'class': 'form-control'}),
             'dia_chi_truoc_chuyen_den': forms.TextInput(attrs={'class': 'form-control'}),
+            'dia_chi_chuyen_di': forms.TextInput(attrs={'class': 'form-control'}),
             'quan_he_chu_ho': forms.TextInput(attrs={'class': 'form-control'}),
             'trang_thai': forms.Select(attrs={'class': 'form-control'}),
             'la_chu_ho': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -1071,25 +1077,35 @@ def tao_dot_phat_thuong(request):
     
     try:
         phan_thuong = DanhMucPhanThuong.objects.get(id=phan_thuong_id)
-        
-        # Tạo phát thưởng cho từng thành viên
         created_count = 0
+        skipped_count = 0
         for tv_id in thanh_vien_ids:
-            LichSuPhatThuong.objects.create(
+            # Kiểm tra trùng lặp: cùng thành viên, phần thưởng, đợt phát, loại DipLe
+            exists = LichSuPhatThuong.objects.filter(
                 thanh_vien_id=tv_id,
                 phan_thuong=phan_thuong,
-                loai_phat_thuong='DipLe',
-                so_luong=so_luong,
                 dot_phat=dot_phat,
-                ghi_chu=ghi_chu,
-                nguoi_cap=request.user
-            )
-            created_count += 1
-        
-        messages.success(request, f'Đã tạo đợt phát thưởng cho {created_count} người!')
+                loai_phat_thuong='DipLe'
+            ).exists()
+            if not exists:
+                LichSuPhatThuong.objects.create(
+                    thanh_vien_id=tv_id,
+                    phan_thuong=phan_thuong,
+                    loai_phat_thuong='DipLe',
+                    so_luong=so_luong,
+                    dot_phat=dot_phat,
+                    ghi_chu=ghi_chu,
+                    nguoi_cap=request.user
+                )
+                created_count += 1
+            else:
+                skipped_count += 1
+        if created_count > 0:
+            messages.success(request, f'Đã tạo đợt phát thưởng cho {created_count} người!')
+        if skipped_count > 0:
+            messages.warning(request, f'Bỏ qua {skipped_count} người đã nhận thưởng ở đợt này!')
     except Exception as e:
         messages.error(request, f'Có lỗi xảy ra: {str(e)}')
-    
     return redirect('users:admin_quan_ly_phan_thuong')
 
 @login_required
@@ -1398,7 +1414,7 @@ def tao_dot_phat_thuong_moi(request):
     except Exception as e:
         messages.error(request, f'Có lỗi xảy ra: {str(e)}')
     
-    return redirect('users:admin_quan_ly_phan_thuong')
+    return redirect('users:quan_ly_phat_thuong_page')
 
 
 @login_required
@@ -1448,13 +1464,8 @@ def cap_nhat_trang_thai_dot(request, dot_id):
                             nguoi_cap=request.user,
                             ghi_chu=f'Khen thưởng học tập - {dot.ten_dot}'
                         )
-                        so_phat_thuong += 1
-                    
-                    messages.success(request, f'Đã đóng đợt "{dot.ten_dot}" và phát thưởng cho {so_phat_thuong} thành viên!')
-                else:
-                    messages.warning(request, f'Đã đóng đợt "{dot.ten_dot}" nhưng chưa có phần thưởng nào trong danh mục!')
-            else:
-                messages.success(request, f'Đã cập nhật trạng thái đợt "{dot.ten_dot}"!')
+            
+            messages.success(request, f'Đã cập nhật trạng thái đợt "{dot.ten_dot}"!')
         else:
             messages.error(request, 'Trạng thái không hợp lệ!')
     
@@ -1537,7 +1548,7 @@ def tao_dot_phat_thuong_page(request):
                                 phan_thuong=phan_thuong_mac_dinh,
                                 loai_phat_thuong='DipLe',
                                 so_luong=1,
-                                dot_phat=dot.ten_dot,  # Lưu tên đợt để query sau này
+                                dot_phat=dot.ten_dot,  # Lưu tên đợt
                                 nguoi_cap=request.user,
                                 ghi_chu=f'Phần thưởng Lễ Tết - {ten_dot}'
                             )
@@ -1591,7 +1602,7 @@ def quan_ly_phat_thuong_page(request):
         dot_phat_list = dot_phat_list.filter(loai_dot=loai_dot_filter)
     
     if trang_thai_filter:
-        dot_phat_list = dot_phat_list.filter(trang_thai=trang_thai_filter)
+               dot_phat_list = dot_phat_list.filter(trang_thai=trang_thai_filter)
     
     context = {
         'tong_phat_thuong': tong_phat_thuong,
@@ -1907,3 +1918,30 @@ def chi_tiet_dot_phat_thuong(request, dot_id):
     }
     
     return render(request, 'users/chi_tiet_dot_phat_thuong.html', context)
+
+
+# --- ADMIN: Xóa hộ khẩu ---
+@login_required
+def admin_xoa_ho_khau(request, ho_id):
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    
+    from apps.core.models import LichSuThayDoiHo, HoGiaDinh, ThanhVien
+    from datetime import date
+    
+    ho = get_object_or_404(HoGiaDinh, pk=ho_id)
+    if request.method == 'POST':
+        # Ghi lịch sử trước khi xóa
+        LichSuThayDoiHo.objects.create(
+            ho_gia_dinh=ho,
+            loai_thay_doi='XoaHoKhau',
+            noi_dung=f"Xóa hộ khẩu: {ho.ma_ho} - Địa chỉ: {ho.dia_chi}",
+            ngay_thay_doi=date.today(),
+            nguoi_thuc_hien=request.user
+        )
+        # Xóa tất cả thành viên thuộc hộ này
+        ThanhVien.objects.filter(ho_gia_dinh=ho).delete()
+        ho.delete()
+        messages.success(request, 'Đã xoá hộ khẩu!')
+        return redirect('users:ho_khau')
+    return render(request, 'users/admin_xoa_ho_khau.html', {'ho': ho})
