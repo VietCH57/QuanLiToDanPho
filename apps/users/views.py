@@ -55,6 +55,8 @@ def admin_tach_ho(request, ho_id):
     if not request.user.profile.role in ['admin', 'citizenship_manager']:
         return HttpResponseForbidden()
     from apps.core.models import HoGiaDinh, ThanhVien, LichSuThayDoiHo
+    from datetime import date
+    
     ho = HoGiaDinh.objects.get(pk=ho_id)
     thanh_vien_trong_ho = ho.thanh_vien_trong_ho.all()
     if request.method == 'POST':
@@ -66,16 +68,43 @@ def admin_tach_ho(request, ho_id):
             ma_ho_moi = request.POST.get('ma_ho_moi')
             dia_chi_moi = request.POST.get('dia_chi_moi')
             ho_moi = HoGiaDinh.objects.create(ma_ho=ma_ho_moi, dia_chi=dia_chi_moi)
-            # Chuyển các thành viên sang hộ mới
-            ThanhVien.objects.filter(id__in=ids).update(ho_gia_dinh=ho_moi)
-            # Ghi lịch sử
+            
+            # Lấy danh sách thành viên sẽ chuyển
+            thanh_vien_chuyen = ThanhVien.objects.filter(id__in=ids)
+            
+            # Chuyển các thành viên sang hộ mới và lưu lịch sử cho từng người
+            from apps.core.models import LichSuThayDoiThanhVien
+            for tv in thanh_vien_chuyen:
+                tv.ho_gia_dinh = ho_moi
+                tv.save()
+                
+                # Lưu lịch sử cho nhân khẩu
+                LichSuThayDoiThanhVien.objects.create(
+                    thanh_vien=tv,
+                    loai_thay_doi='TachHo',
+                    noi_dung=f'Tách khỏi hộ {ho.ma_ho} sang hộ mới {ma_ho_moi}',
+                    ngay_thay_doi=date.today(),
+                    nguoi_thuc_hien=request.user
+                )
+            
+            # Ghi lịch sử cho hộ cũ
             LichSuThayDoiHo.objects.create(
                 ho_gia_dinh=ho,
                 loai_thay_doi='TachHo',
                 noi_dung=f'Tách {len(ids)} nhân khẩu sang hộ mới {ma_ho_moi}',
-                ngay_thay_doi=timezone.now().date(),
+                ngay_thay_doi=date.today(),
                 nguoi_thuc_hien=request.user
             )
+            
+            # Ghi lịch sử cho hộ mới
+            LichSuThayDoiHo.objects.create(
+                ho_gia_dinh=ho_moi,
+                loai_thay_doi='TachHo',
+                noi_dung=f'Hộ mới được tách từ hộ {ho.ma_ho} với {len(ids)} thành viên',
+                ngay_thay_doi=date.today(),
+                nguoi_thuc_hien=request.user
+            )
+            
             messages.success(request, f'Đã tách hộ thành công!')
             return redirect('users:ho_khau')
     return render(request, 'users/admin_tach_ho.html', {'ho': ho, 'thanh_vien_trong_ho': thanh_vien_trong_ho})
@@ -762,7 +791,34 @@ def admin_them_nhan_khau(request):
     if request.method == 'POST':
         form = ThanhVienForm(request.POST)
         if form.is_valid():
-            form.save()
+            thanh_vien = form.save()
+            
+            # Lưu lịch sử thêm mới nhân khẩu
+            from apps.core.models import LichSuThayDoiThanhVien, LichSuThayDoiHo
+            from datetime import date
+            
+            noi_dung = f"Thêm mới nhân khẩu: {thanh_vien.ho_ten}"
+            if thanh_vien.dia_chi_truoc_chuyen_den == 'mới sinh':
+                noi_dung += " (mới sinh)"
+            
+            LichSuThayDoiThanhVien.objects.create(
+                thanh_vien=thanh_vien,
+                loai_thay_doi='ThemMoi',
+                noi_dung=noi_dung,
+                ngay_thay_doi=date.today(),
+                nguoi_thuc_hien=request.user
+            )
+            
+            # Lưu lịch sử thay đổi cho hộ
+            if thanh_vien.ho_gia_dinh:
+                LichSuThayDoiHo.objects.create(
+                    ho_gia_dinh=thanh_vien.ho_gia_dinh,
+                    loai_thay_doi='Khac',
+                    noi_dung=f"Thêm thành viên mới: {thanh_vien.ho_ten} (CCCD: {thanh_vien.cccd or 'Chưa có'})",
+                    ngay_thay_doi=date.today(),
+                    nguoi_thuc_hien=request.user
+                )
+            
             messages.success(request, 'Đã thêm nhân khẩu mới!')
             return redirect('users:nhan_khau')
     else:
@@ -774,10 +830,104 @@ def admin_sua_nhan_khau(request, pk):
     if not request.user.profile.role in ['admin', 'citizenship_manager']:
         return HttpResponseForbidden()
     thanh_vien = ThanhVien.objects.get(pk=pk)
+    
+    # Lưu trạng thái cũ để so sánh
+    old_data = {
+        'ho_ten': thanh_vien.ho_ten,
+        'cccd': thanh_vien.cccd,
+        'ngay_sinh': thanh_vien.ngay_sinh,
+        'trang_thai': thanh_vien.trang_thai,
+        'dia_chi_truoc_chuyen_den': thanh_vien.dia_chi_truoc_chuyen_den,
+        'ho_gia_dinh': thanh_vien.ho_gia_dinh,
+    }
+    
     if request.method == 'POST':
         form = ThanhVienForm(request.POST, instance=thanh_vien)
         if form.is_valid():
-            form.save()
+            thanh_vien = form.save()
+            
+            # Lưu lịch sử thay đổi
+            from apps.core.models import LichSuThayDoiThanhVien, LichSuThayDoiHo
+            from datetime import date
+            
+            # Xác định loại thay đổi và nội dung
+            loai_thay_doi = 'ChinhSua'
+            noi_dung_parts = []
+            
+            if old_data['trang_thai'] != thanh_vien.trang_thai:
+                if thanh_vien.trang_thai == 'DaChuyenDi':
+                    loai_thay_doi = 'ChuyenDi'
+                    noi_dung_parts.append(f"Chuyển đi từ ngày {date.today().strftime('%d/%m/%Y')}")
+                    
+                    # Lưu lịch sử cho hộ khi thành viên chuyển đi
+                    if old_data['ho_gia_dinh']:
+                        LichSuThayDoiHo.objects.create(
+                            ho_gia_dinh=old_data['ho_gia_dinh'],
+                            loai_thay_doi='Khac',
+                            noi_dung=f"Thành viên {thanh_vien.ho_ten} chuyển đi (đến: {thanh_vien.dia_chi_truoc_chuyen_den or 'Không rõ'})",
+                            ngay_thay_doi=date.today(),
+                            nguoi_thuc_hien=request.user
+                        )
+                        
+                elif thanh_vien.trang_thai == 'DaQuaDoi':
+                    loai_thay_doi = 'QuaDoi'
+                    noi_dung_parts.append(f"Đã qua đời")
+                    
+                    # Lưu lịch sử cho hộ khi thành viên qua đời
+                    if old_data['ho_gia_dinh']:
+                        LichSuThayDoiHo.objects.create(
+                            ho_gia_dinh=old_data['ho_gia_dinh'],
+                            loai_thay_doi='Khac',
+                            noi_dung=f"Thành viên {thanh_vien.ho_ten} đã qua đời",
+                            ngay_thay_doi=date.today(),
+                            nguoi_thuc_hien=request.user
+                        )
+            
+            # Kiểm tra chuyển hộ
+            if old_data['ho_gia_dinh'] != thanh_vien.ho_gia_dinh:
+                noi_dung_parts.append(f"Chuyển từ hộ {old_data['ho_gia_dinh'].ma_ho} sang hộ {thanh_vien.ho_gia_dinh.ma_ho}")
+                
+                # Lưu lịch sử cho hộ cũ
+                if old_data['ho_gia_dinh']:
+                    LichSuThayDoiHo.objects.create(
+                        ho_gia_dinh=old_data['ho_gia_dinh'],
+                        loai_thay_doi='Khac',
+                        noi_dung=f"Thành viên {thanh_vien.ho_ten} rời khỏi hộ (chuyển sang hộ {thanh_vien.ho_gia_dinh.ma_ho})",
+                        ngay_thay_doi=date.today(),
+                        nguoi_thuc_hien=request.user
+                    )
+                
+                # Lưu lịch sử cho hộ mới
+                if thanh_vien.ho_gia_dinh:
+                    LichSuThayDoiHo.objects.create(
+                        ho_gia_dinh=thanh_vien.ho_gia_dinh,
+                        loai_thay_doi='Khac',
+                        noi_dung=f"Thêm thành viên mới: {thanh_vien.ho_ten} (chuyển từ hộ {old_data['ho_gia_dinh'].ma_ho})",
+                        ngay_thay_doi=date.today(),
+                        nguoi_thuc_hien=request.user
+                    )
+            
+            # Ghi nhận các thay đổi khác
+            if old_data['ho_ten'] != thanh_vien.ho_ten:
+                noi_dung_parts.append(f"Đổi tên: {old_data['ho_ten']} → {thanh_vien.ho_ten}")
+            if old_data['cccd'] != thanh_vien.cccd:
+                noi_dung_parts.append(f"Đổi CCCD: {old_data['cccd']} → {thanh_vien.cccd}")
+            
+            if not noi_dung_parts:
+                noi_dung_parts.append("Cập nhật thông tin nhân khẩu")
+            
+            noi_dung = "; ".join(noi_dung_parts)
+            
+            LichSuThayDoiThanhVien.objects.create(
+                thanh_vien=thanh_vien,
+                loai_thay_doi=loai_thay_doi,
+                noi_dung=noi_dung,
+                ngay_thay_doi=date.today(),
+                noi_chuyen_den=thanh_vien.dia_chi_truoc_chuyen_den if loai_thay_doi == 'ChuyenDi' else None,
+                ghi_chu='Đã qua đời' if loai_thay_doi == 'QuaDoi' else '',
+                nguoi_thuc_hien=request.user
+            )
+            
             messages.success(request, 'Đã cập nhật thông tin nhân khẩu!')
             return redirect('users:nhan_khau')
     else:
@@ -790,6 +940,34 @@ def admin_xoa_nhan_khau(request, pk):
         return HttpResponseForbidden()
     thanh_vien = ThanhVien.objects.get(pk=pk)
     if request.method == 'POST':
+        # Lưu lịch sử trước khi xóa
+        from apps.core.models import LichSuThayDoiThanhVien, LichSuThayDoiHo
+        from datetime import date
+        
+        ho_gia_dinh = thanh_vien.ho_gia_dinh
+        ho_ten = thanh_vien.ho_ten
+        cccd = thanh_vien.cccd
+        
+        # Lưu lịch sử cho nhân khẩu
+        LichSuThayDoiThanhVien.objects.create(
+            thanh_vien=thanh_vien,
+            loai_thay_doi='Khac',
+            noi_dung=f"Xóa nhân khẩu: {ho_ten} - CCCD: {cccd}",
+            ngay_thay_doi=date.today(),
+            ghi_chu='Đã xóa khỏi hệ thống',
+            nguoi_thuc_hien=request.user
+        )
+        
+        # Lưu lịch sử cho hộ
+        if ho_gia_dinh:
+            LichSuThayDoiHo.objects.create(
+                ho_gia_dinh=ho_gia_dinh,
+                loai_thay_doi='Khac',
+                noi_dung=f"Xóa thành viên: {ho_ten} (CCCD: {cccd or 'Chưa có'})",
+                ngay_thay_doi=date.today(),
+                nguoi_thuc_hien=request.user
+            )
+        
         thanh_vien.delete()
         messages.success(request, 'Đã xoá nhân khẩu!')
         return redirect('users:nhan_khau')
@@ -979,7 +1157,26 @@ def duyet_thanh_tich(request, thanh_tich_id):
             tt.nguoi_duyet = request.user
             tt.ngay_duyet = timezone.now().date()
             tt.save()
-            messages.success(request, f'Đã duyệt thành tích của {tt.thanh_vien.ho_ten}!')
+            
+            # Tự động tạo lịch sử phát thưởng ngay khi duyệt
+            from apps.core.models import LichSuPhatThuong, DanhMucPhanThuong
+            
+            phan_thuong_mac_dinh = DanhMucPhanThuong.objects.first()
+            if phan_thuong_mac_dinh and tt.dot_phat_thuong:
+                # Kiểm tra chưa phát thưởng
+                if not LichSuPhatThuong.objects.filter(thong_tin_hoc_tap=tt).exists():
+                    LichSuPhatThuong.objects.create(
+                        thanh_vien=tt.thanh_vien,
+                        phan_thuong=phan_thuong_mac_dinh,
+                        loai_phat_thuong='HocTap',
+                        thong_tin_hoc_tap=tt,
+                        so_luong=1,
+                        dot_phat=tt.dot_phat_thuong.ten_dot,
+                        nguoi_cap=request.user,
+                        ghi_chu=f'Khen thưởng học tập - {tt.dot_phat_thuong.ten_dot}'
+                    )
+            
+            messages.success(request, f'Đã duyệt thành tích của {tt.ho_ten or tt.thanh_vien.ho_ten}!')
         
         elif action == 'reject':
             ly_do = request.POST.get('ly_do_tu_choi', '')
@@ -993,7 +1190,15 @@ def duyet_thanh_tich(request, thanh_tich_id):
     except Exception as e:
         messages.error(request, f'Có lỗi xảy ra: {str(e)}')
     
-    return redirect('users:admin_quan_ly_phan_thuong')
+    # Redirect về trang duyệt thành tích theo đợt nếu có
+    try:
+        tt = ThongTinHocTap.objects.get(id=thanh_tich_id)
+        if tt.dot_phat_thuong:
+            return redirect('users:duyet_thanh_tich_theo_dot', dot_id=tt.dot_phat_thuong.id)
+    except:
+        pass
+    
+    return redirect('users:quan_ly_phat_thuong_page')
 
 # --- CITIZEN: Gửi thành tích học tập ---
 @login_required
@@ -1039,13 +1244,13 @@ def gui_thanh_tich(request):
         thanh_vien = ThanhVien.objects.get(cccd=request.user.username)
         
         dot_phat_thuong_id = request.POST.get('dot_phat_thuong_id')
-        nam_hoc = request.POST.get('nam_hoc')
+        ho_ten = request.POST.get('ho_ten')
         truong = request.POST.get('truong')
         lop = request.POST.get('lop')
         thanh_tich = request.POST.get('thanh_tich')
         minh_chung = request.FILES.get('minh_chung')
         
-        if not all([dot_phat_thuong_id, nam_hoc, truong, lop, thanh_tich, minh_chung]):
+        if not all([dot_phat_thuong_id, ho_ten, truong, lop, thanh_tich, minh_chung]):
             messages.error(request, 'Vui lòng điền đầy đủ thông tin!')
             return redirect('users:thanh_tich_hoc_tap')
         
@@ -1058,7 +1263,7 @@ def gui_thanh_tich(request):
         ThongTinHocTap.objects.create(
             dot_phat_thuong=dot,
             thanh_vien=thanh_vien,
-            nam_hoc=nam_hoc,
+            ho_ten=ho_ten,
             truong=truong,
             lop=lop,
             thanh_tich=thanh_tich,
@@ -1115,6 +1320,38 @@ def phan_thuong_cua_toi(request):
     return render(request, 'users/phan_thuong_cua_toi.html', context)
 
 
+@login_required
+def xac_nhan_nhan_qua(request, lich_su_id):
+    """Người dân xác nhận đã nhận quà"""
+    if not hasattr(request.user, 'profile'):
+        return HttpResponseForbidden()
+    
+    if request.method != 'POST':
+        return redirect('users:phan_thuong_cua_toi')
+    
+    from apps.core.models import LichSuPhatThuong, ThanhVien
+    
+    try:
+        thanh_vien = ThanhVien.objects.get(cccd=request.user.username)
+        lich_su = LichSuPhatThuong.objects.get(id=lich_su_id, thanh_vien=thanh_vien)
+        
+        if lich_su.trang_thai == 'ChuaNhan':
+            lich_su.trang_thai = 'DaNhan'
+            lich_su.save()
+            messages.success(request, 'Đã xác nhận nhận quà thành công!')
+        else:
+            messages.info(request, 'Bạn đã xác nhận nhận quà này rồi!')
+    
+    except ThanhVien.DoesNotExist:
+        messages.error(request, 'Không tìm thấy thông tin nhân khẩu của bạn!')
+    except LichSuPhatThuong.DoesNotExist:
+        messages.error(request, 'Không tìm thấy thông tin phần thưởng!')
+    except Exception as e:
+        messages.error(request, f'Có lỗi xảy ra: {str(e)}')
+    
+    return redirect('users:phan_thuong_cua_toi')
+
+
 # --- ADMIN: Quản lý đợt phát thưởng ---
 @login_required
 def tao_dot_phat_thuong_moi(request):
@@ -1162,18 +1399,53 @@ def cap_nhat_trang_thai_dot(request, dot_id):
         return HttpResponseForbidden()
     
     if request.method != 'POST':
-        return redirect('users:admin_quan_ly_phan_thuong')
+        return redirect('users:quan_ly_phat_thuong_page')
     
     from apps.core.models import DotPhatThuong
     
     try:
         dot = DotPhatThuong.objects.get(id=dot_id)
         trang_thai_moi = request.POST.get('trang_thai')
+        trang_thai_cu = dot.trang_thai
         
         if trang_thai_moi in ['DangMo', 'DaDong', 'DangPhat', 'HoanThanh']:
             dot.trang_thai = trang_thai_moi
             dot.save()
-            messages.success(request, f'Đã cập nhật trạng thái đợt "{dot.ten_dot}"!')
+            
+            # Nếu đóng đợt Khen thưởng, tự động phát thưởng cho các thành tích đã duyệt
+            if trang_thai_moi == 'DaDong' and trang_thai_cu != 'DaDong' and dot.loai_dot == 'KhenThuong':
+                from apps.core.models import ThongTinHocTap, LichSuPhatThuong, DanhMucPhanThuong
+                
+                # Lấy danh sách thành tích đã duyệt nhưng chưa phát thưởng
+                thanh_tich_da_duyet = ThongTinHocTap.objects.filter(
+                    dot_phat_thuong=dot,
+                    trang_thai='DaDuyet'
+                ).exclude(
+                    phan_thuong_nhan__isnull=False
+                )
+                
+                phan_thuong_mac_dinh = DanhMucPhanThuong.objects.first()
+                so_phat_thuong = 0
+                
+                if phan_thuong_mac_dinh:
+                    for thanh_tich in thanh_tich_da_duyet:
+                        LichSuPhatThuong.objects.create(
+                            thanh_vien=thanh_tich.thanh_vien,
+                            phan_thuong=phan_thuong_mac_dinh,
+                            loai_phat_thuong='HocTap',
+                            thong_tin_hoc_tap=thanh_tich,
+                            so_luong=1,
+                            dot_phat=dot.ten_dot,  # Lưu tên đợt
+                            nguoi_cap=request.user,
+                            ghi_chu=f'Khen thưởng học tập - {dot.ten_dot}'
+                        )
+                        so_phat_thuong += 1
+                    
+                    messages.success(request, f'Đã đóng đợt "{dot.ten_dot}" và phát thưởng cho {so_phat_thuong} thành viên!')
+                else:
+                    messages.warning(request, f'Đã đóng đợt "{dot.ten_dot}" nhưng chưa có phần thưởng nào trong danh mục!')
+            else:
+                messages.success(request, f'Đã cập nhật trạng thái đợt "{dot.ten_dot}"!')
         else:
             messages.error(request, 'Trạng thái không hợp lệ!')
     
@@ -1182,4 +1454,447 @@ def cap_nhat_trang_thai_dot(request, dot_id):
     except Exception as e:
         messages.error(request, f'Có lỗi xảy ra: {str(e)}')
     
-    return redirect('users:admin_quan_ly_phan_thuong')
+    return redirect('users:quan_ly_phat_thuong_page')
+
+
+@login_required
+def tao_dot_phat_thuong_page(request):
+    """Trang tạo đợt phát thưởng mới"""
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    
+    if request.method == 'POST':
+        from apps.core.models import DotPhatThuong
+        
+        try:
+            loai_dot = request.POST.get('loai_dot')
+            ten_dot = request.POST.get('ten_dot')
+            mo_ta = request.POST.get('mo_ta', '')
+            ngay_bat_dau = request.POST.get('ngay_bat_dau')
+            ngay_ket_thuc = request.POST.get('ngay_ket_thuc')
+            
+            # Validate required fields
+            if not all([loai_dot, ten_dot, ngay_bat_dau, ngay_ket_thuc]):
+                messages.error(request, 'Vui lòng điền đầy đủ thông tin!')
+                return redirect('users:tao_dot_phat_thuong_page')
+            
+            # Xử lý tuổi nếu là Lễ Tết
+            tuoi_min = None
+            tuoi_max = None
+            if loai_dot == 'LeTet':
+                tuoi_min = request.POST.get('tuoi_min')
+                tuoi_max = request.POST.get('tuoi_max')
+                if not tuoi_min or not tuoi_max:
+                    messages.error(request, 'Vui lòng nhập khoảng tuổi cho đợt Lễ Tết!')
+                    return redirect('users:tao_dot_phat_thuong_page')
+            
+            dot = DotPhatThuong.objects.create(
+                loai_dot=loai_dot,
+                ten_dot=ten_dot,
+                nam_hoc=None,  # Không dùng năm học nữa
+                mo_ta=mo_ta,
+                ngay_bat_dau=ngay_bat_dau,
+                ngay_ket_thuc=ngay_ket_thuc,
+                tuoi_min=tuoi_min,
+                tuoi_max=tuoi_max,
+                nguoi_tao=request.user
+            )
+            
+            # Nếu là Lễ Tết, tự động tạo danh sách người nhận thưởng
+            if loai_dot == 'LeTet':
+                from apps.core.models import ThanhVien, DanhMucPhanThuong, LichSuPhatThuong
+                from datetime import date, timedelta
+                
+                # Tính tuổi từ ngày sinh
+                ngay_hien_tai = date.today()
+                # Người tối thiểu tuoi_min tuổi: sinh từ hôm nay - tuoi_min năm trở về trước
+                ngay_sinh_max = date(ngay_hien_tai.year - int(tuoi_min), ngay_hien_tai.month, ngay_hien_tai.day)
+                # Người tối đa tuoi_max tuổi: sinh từ hôm nay - (tuoi_max+1) năm trở về sau
+                ngay_sinh_min = date(ngay_hien_tai.year - int(tuoi_max) - 1, ngay_hien_tai.month, ngay_hien_tai.day) + timedelta(days=1)
+                
+                # Lấy danh sách thành viên trong khoảng tuổi
+                thanh_vien_list = ThanhVien.objects.filter(
+                    ngay_sinh__gte=ngay_sinh_min,
+                    ngay_sinh__lte=ngay_sinh_max
+                )
+                
+                # Tạo lịch sử phát thưởng cho từng người (giả định có phần thưởng mặc định)
+                try:
+                    phan_thuong_mac_dinh = DanhMucPhanThuong.objects.first()
+                    if phan_thuong_mac_dinh:
+                        for thanh_vien in thanh_vien_list:
+                            LichSuPhatThuong.objects.create(
+                                thanh_vien=thanh_vien,
+                                phan_thuong=phan_thuong_mac_dinh,
+                                loai_phat_thuong='DipLe',
+                                so_luong=1,
+                                dot_phat=dot.ten_dot,  # Lưu tên đợt để query sau này
+                                nguoi_cap=request.user,
+                                ghi_chu=f'Phần thưởng Lễ Tết - {ten_dot}'
+                            )
+                        messages.success(request, f'Đã tạo đợt "{ten_dot}" và phát thưởng cho {thanh_vien_list.count()} người dân trong khoảng tuổi {tuoi_min}-{tuoi_max}!')
+                    else:
+                        messages.error(request, f'❌ KHÔNG THỂ PHÁT THƯỞNG: Bạn cần tạo ít nhất 1 phần thưởng trong danh mục trước! Đã tìm thấy {thanh_vien_list.count()} người dân nhưng chưa có phần thưởng để phát.')
+                except Exception as e:
+                    messages.error(request, f'Đã tạo đợt nhưng có lỗi khi phát thưởng: {str(e)}')
+            else:
+                messages.success(request, f'Đã tạo đợt phát thưởng "{ten_dot}" thành công!')
+            
+            return redirect('users:quan_ly_phat_thuong_page')
+        
+        except Exception as e:
+            messages.error(request, f'Có lỗi xảy ra: {str(e)}')
+            return redirect('users:tao_dot_phat_thuong_page')
+    
+    return render(request, 'users/tao_dot_phat_thuong.html')
+
+
+@login_required
+def quan_ly_phat_thuong_page(request):
+    """Trang quản lý phát thưởng"""
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    
+    from apps.core.models import LichSuPhatThuong, DotPhatThuong, ThongTinHocTap
+    from django.db.models import Sum, Count, Q
+    
+    # Thống kê tổng quan
+    tong_phat_thuong = LichSuPhatThuong.objects.count()
+    tong_gia_tri = sum(pt.tong_gia_tri() for pt in LichSuPhatThuong.objects.all())
+    pending_count = ThongTinHocTap.objects.filter(trang_thai='ChoDuyet').count()
+    approved_count = ThongTinHocTap.objects.filter(trang_thai='DaDuyet').count()
+    
+    # Danh sách đợt phát thưởng với tìm kiếm
+    dot_phat_list = DotPhatThuong.objects.all().select_related('nguoi_tao').order_by('-ngay_tao')
+    
+    # Xử lý tìm kiếm
+    search_query = request.GET.get('search', '').strip()
+    loai_dot_filter = request.GET.get('loai_dot', '')
+    trang_thai_filter = request.GET.get('trang_thai', '')
+    
+    if search_query:
+        dot_phat_list = dot_phat_list.filter(
+            Q(ten_dot__icontains=search_query) |
+            Q(mo_ta__icontains=search_query)
+        )
+    
+    if loai_dot_filter:
+        dot_phat_list = dot_phat_list.filter(loai_dot=loai_dot_filter)
+    
+    if trang_thai_filter:
+        dot_phat_list = dot_phat_list.filter(trang_thai=trang_thai_filter)
+    
+    context = {
+        'tong_phat_thuong': tong_phat_thuong,
+        'tong_gia_tri': tong_gia_tri,
+        'pending_count': pending_count,
+        'approved_count': approved_count,
+        'dot_phat_list': dot_phat_list,
+        'search_query': search_query,
+        'loai_dot_filter': loai_dot_filter,
+        'trang_thai_filter': trang_thai_filter,
+    }
+    
+    return render(request, 'users/quan_ly_phat_thuong.html', context)
+
+
+@login_required
+def sua_dot_phat_thuong(request, dot_id):
+    """Sửa đợt phát thưởng"""
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    
+    from apps.core.models import DotPhatThuong
+    
+    try:
+        dot = DotPhatThuong.objects.get(id=dot_id)
+    except DotPhatThuong.DoesNotExist:
+        messages.error(request, 'Không tìm thấy đợt phát thưởng!')
+        return redirect('users:quan_ly_phat_thuong_page')
+    
+    if request.method == 'POST':
+        try:
+            # Lấy dữ liệu từ form
+            ten_dot = request.POST.get('ten_dot')
+            mo_ta = request.POST.get('mo_ta', '')
+            ngay_bat_dau = request.POST.get('ngay_bat_dau')
+            ngay_ket_thuc = request.POST.get('ngay_ket_thuc')
+            
+            # Kiểm tra dữ liệu bắt buộc
+            if not all([ten_dot, ngay_bat_dau, ngay_ket_thuc]):
+                messages.error(request, 'Vui lòng điền đầy đủ thông tin bắt buộc!')
+                return redirect('users:sua_dot_phat_thuong', dot_id=dot_id)
+            
+            # Cập nhật thông tin đợt
+            dot.ten_dot = ten_dot
+            dot.mo_ta = mo_ta
+            dot.ngay_bat_dau = ngay_bat_dau
+            dot.ngay_ket_thuc = ngay_ket_thuc
+            
+            # Nếu là đợt Lễ Tết, cập nhật tuổi min/max
+            if dot.loai_dot == 'LeTet':
+                tuoi_min = request.POST.get('tuoi_min')
+                tuoi_max = request.POST.get('tuoi_max')
+                if tuoi_min and tuoi_max:
+                    dot.tuoi_min = int(tuoi_min)
+                    dot.tuoi_max = int(tuoi_max)
+            
+            dot.save()
+            messages.success(request, f'Đã cập nhật đợt phát thưởng "{ten_dot}" thành công!')
+            return redirect('users:chi_tiet_dot_phat_thuong', dot_id=dot.id)
+            
+        except Exception as e:
+            messages.error(request, f'Có lỗi xảy ra: {str(e)}')
+            return redirect('users:sua_dot_phat_thuong', dot_id=dot_id)
+    
+    context = {
+        'dot': dot,
+    }
+    return render(request, 'users/sua_dot_phat_thuong.html', context)
+
+
+@login_required
+def xoa_dot_phat_thuong(request, dot_id):
+    """Xóa đợt phát thưởng"""
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    
+    from apps.core.models import DotPhatThuong
+    
+    try:
+        dot = DotPhatThuong.objects.get(id=dot_id)
+        ten_dot = dot.ten_dot
+        
+        # Kiểm tra xem đợt có dữ liệu liên quan không
+        if dot.danh_sach_thanh_tich.exists():
+            messages.warning(request, f'Không thể xóa đợt "{ten_dot}" vì đã có {dot.danh_sach_thanh_tich.count()} thành tích liên quan!')
+        else:
+            dot.delete()
+            messages.success(request, f'Đã xóa đợt phát thưởng "{ten_dot}" thành công!')
+    except DotPhatThuong.DoesNotExist:
+        messages.error(request, 'Không tìm thấy đợt phát thưởng!')
+    except Exception as e:
+        messages.error(request, f'Có lỗi xảy ra: {str(e)}')
+    
+    return redirect('users:quan_ly_phat_thuong_page')
+
+
+@login_required
+def duyet_thanh_tich_theo_dot(request, dot_id):
+    """Trang duyệt thành tích theo đợt"""
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    
+    from apps.core.models import DotPhatThuong, ThongTinHocTap
+    
+    try:
+        dot = DotPhatThuong.objects.get(id=dot_id)
+    except DotPhatThuong.DoesNotExist:
+        messages.error(request, 'Đợt phát thưởng không tồn tại!')
+        return redirect('users:quan_ly_phat_thuong_page')
+    
+    # Lấy danh sách thành tích của đợt này
+    thanh_tich_list = ThongTinHocTap.objects.filter(
+        dot_phat_thuong=dot
+    ).select_related('thanh_vien', 'nguoi_tao').order_by('-ngay_tao')
+    
+    context = {
+        'dot': dot,
+        'thanh_tich_list': thanh_tich_list,
+    }
+    
+    return render(request, 'users/duyet_thanh_tich_theo_dot.html', context)
+
+
+@login_required
+def lich_su_ho_khau(request, ho_id):
+    """Xem lịch sử thay đổi của một hộ khẩu"""
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    
+    from apps.core.models import HoGiaDinh, LichSuThayDoiHo
+    
+    try:
+        ho = HoGiaDinh.objects.get(id=ho_id)
+    except HoGiaDinh.DoesNotExist:
+        messages.error(request, 'Không tìm thấy hộ khẩu!')
+        return redirect('users:ho_khau')
+    
+    # Lấy lịch sử thay đổi hộ
+    lich_su_ho = ho.lich_su_thay_doi.all().select_related('nguoi_thuc_hien')
+    
+    # Lấy lịch sử thay đổi của tất cả thành viên trong hộ
+    thanh_vien_list = ho.thanh_vien_trong_ho.all()
+    
+    context = {
+        'ho': ho,
+        'lich_su_ho': lich_su_ho,
+        'thanh_vien_list': thanh_vien_list,
+    }
+    
+    return render(request, 'users/lich_su_ho_khau.html', context)
+
+
+@login_required
+def lich_su_nhan_khau(request, thanh_vien_id):
+    """Xem lịch sử thay đổi của một nhân khẩu"""
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    
+    from apps.core.models import ThanhVien, LichSuThayDoiThanhVien
+    
+    try:
+        thanh_vien = ThanhVien.objects.get(id=thanh_vien_id)
+    except ThanhVien.DoesNotExist:
+        messages.error(request, 'Không tìm thấy nhân khẩu!')
+        return redirect('users:nhan_khau')
+    
+    # Lấy lịch sử thay đổi
+    lich_su = thanh_vien.lich_su_thay_doi.all().select_related('nguoi_thuc_hien')
+    
+    context = {
+        'thanh_vien': thanh_vien,
+        'lich_su': lich_su,
+    }
+    
+    return render(request, 'users/lich_su_nhan_khau.html', context)
+
+
+@login_required
+def chi_tiet_ho_khau_view(request, ho_id):
+    """
+    Xem chi tiết hộ khẩu - hiển thị thông tin từng thành viên theo trang
+    Cả người dân và admin đều dùng view này
+    """
+    from apps.core.models import HoGiaDinh
+    
+    try:
+        ho = HoGiaDinh.objects.get(id=ho_id)
+    except HoGiaDinh.DoesNotExist:
+        messages.error(request, 'Không tìm thấy hộ khẩu!')
+        return redirect('users:ho_khau')
+    
+    # Lấy danh sách thành viên
+    thanh_vien_list = ho.thanh_vien_trong_ho.all().order_by('-la_chu_ho', 'ngay_sinh')
+    
+    # Lấy thành viên hiện tại từ query param (mặc định là người đầu tiên)
+    thanh_vien_id = request.GET.get('thanh_vien')
+    if thanh_vien_id:
+        try:
+            current_thanh_vien = thanh_vien_list.get(id=thanh_vien_id)
+        except:
+            current_thanh_vien = thanh_vien_list.first()
+    else:
+        current_thanh_vien = thanh_vien_list.first()
+    
+    # Tính toán vị trí hiện tại và tổng số
+    current_index = list(thanh_vien_list).index(current_thanh_vien) if current_thanh_vien else 0
+    total = thanh_vien_list.count()
+    
+    # Lấy thành viên trước và sau
+    prev_thanh_vien = thanh_vien_list[current_index - 1] if current_index > 0 else None
+    next_thanh_vien = thanh_vien_list[current_index + 1] if current_index < total - 1 else None
+    
+    context = {
+        'ho': ho,
+        'thanh_vien_list': thanh_vien_list,
+        'current_thanh_vien': current_thanh_vien,
+        'current_index': current_index + 1,
+        'total': total,
+        'prev_thanh_vien': prev_thanh_vien,
+        'next_thanh_vien': next_thanh_vien,
+        'is_admin': request.user.profile.role in ['admin', 'citizenship_manager'],
+    }
+    
+    return render(request, 'users/chi_tiet_ho_khau_view.html', context)
+
+
+@login_required
+def chi_tiet_dot_phat_thuong(request, dot_id):
+    """Trang chi tiết đợt phát thưởng với danh sách người nhận và xác nhận phát quà"""
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    
+    from apps.core.models import DotPhatThuong, LichSuPhatThuong, ThongTinHocTap, DanhMucPhanThuong
+    from django.db.models import Sum, Count, Q
+    
+    try:
+        dot = DotPhatThuong.objects.get(id=dot_id)
+    except DotPhatThuong.DoesNotExist:
+        messages.error(request, 'Đợt phát thưởng không tồn tại!')
+        return redirect('users:quan_ly_phat_thuong_page')
+    
+    # Xử lý xác nhận phát quà
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'xac_nhan_phat':
+            lich_su_id = request.POST.get('lich_su_id')
+            try:
+                lich_su = LichSuPhatThuong.objects.get(id=lich_su_id)
+                lich_su.trang_thai = 'DaNhan'
+                lich_su.save()
+                messages.success(request, f'Đã xác nhận phát quà cho {lich_su.thanh_vien.ho_ten}!')
+            except LichSuPhatThuong.DoesNotExist:
+                messages.error(request, 'Không tìm thấy lịch sử phát thưởng!')
+        
+        elif action == 'cap_nhat_phan_thuong':
+            lich_su_id = request.POST.get('lich_su_id')
+            phan_thuong_id = request.POST.get('phan_thuong_id')
+            so_luong = request.POST.get('so_luong', 1)
+            
+            try:
+                lich_su = LichSuPhatThuong.objects.get(id=lich_su_id)
+                phan_thuong = DanhMucPhanThuong.objects.get(id=phan_thuong_id)
+                
+                lich_su.phan_thuong = phan_thuong
+                lich_su.so_luong = int(so_luong)
+                lich_su.save()
+                
+                messages.success(request, f'Đã cập nhật phần thưởng cho {lich_su.thanh_vien.ho_ten}!')
+            except (LichSuPhatThuong.DoesNotExist, DanhMucPhanThuong.DoesNotExist):
+                messages.error(request, 'Không tìm thấy dữ liệu!')
+        
+        elif action == 'xac_nhan_tat_ca':
+            # Xác nhận tất cả phần thưởng chưa nhận
+            count = LichSuPhatThuong.objects.filter(
+                Q(thong_tin_hoc_tap__dot_phat_thuong=dot) | Q(dot_phat=dot.ten_dot),
+                trang_thai='ChuaNhan'
+            ).update(trang_thai='DaNhan')
+            
+            messages.success(request, f'Đã xác nhận phát quà cho {count} người!')
+        
+        return redirect('users:chi_tiet_dot_phat_thuong', dot_id=dot_id)
+    
+    # Lấy danh sách phát thưởng của đợt này
+    if dot.loai_dot == 'LeTet':
+        # Lễ Tết: lấy theo ghi_chu hoặc dot_phat
+        danh_sach_phat_thuong = LichSuPhatThuong.objects.filter(
+            Q(dot_phat__icontains=dot.ten_dot) | Q(ghi_chu__icontains=dot.ten_dot)
+        ).select_related('thanh_vien', 'phan_thuong', 'nguoi_cap').order_by('thanh_vien__ho_ten')
+    else:
+        # Khen thưởng: lấy theo thong_tin_hoc_tap
+        danh_sach_phat_thuong = LichSuPhatThuong.objects.filter(
+            thong_tin_hoc_tap__dot_phat_thuong=dot
+        ).select_related('thanh_vien', 'phan_thuong', 'nguoi_cap', 'thong_tin_hoc_tap').order_by('thanh_vien__ho_ten')
+    
+    # Thống kê
+    tong_nguoi_nhan = danh_sach_phat_thuong.count()
+    da_nhan = danh_sach_phat_thuong.filter(trang_thai='DaNhan').count()
+    chua_nhan = danh_sach_phat_thuong.filter(trang_thai='ChuaNhan').count()
+    tong_gia_tri = sum(pt.tong_gia_tri() for pt in danh_sach_phat_thuong)
+    
+    # Lấy danh sách phần thưởng để chọn
+    danh_muc_phan_thuong = DanhMucPhanThuong.objects.all()
+    
+    context = {
+        'dot': dot,
+        'danh_sach_phat_thuong': danh_sach_phat_thuong,
+        'tong_nguoi_nhan': tong_nguoi_nhan,
+        'da_nhan': da_nhan,
+        'chua_nhan': chua_nhan,
+        'tong_gia_tri': tong_gia_tri,
+        'danh_muc_phan_thuong': danh_muc_phan_thuong,
+    }
+    
+    return render(request, 'users/chi_tiet_dot_phat_thuong.html', context)

@@ -157,6 +157,16 @@
         background: #2563EB;
     }
 
+    .btn-view {
+        background: #667eea;
+        color: white;
+        margin-right: 5px;
+    }
+
+    .btn-view:hover {
+        background: #5568d3;
+    }
+
     .btn-edit {
         background: #F59E0B;
         color: white;
@@ -305,6 +315,7 @@
                     <td>{{ nk.nghe_nghiep|default:"-" }}</td>
                     <td>
                         <div class="actions-cell">
+                            <a href="{% url 'users:lich_su_nhan_khau' nk.id %}" class="btn btn-view" title="Xem lịch sử">📋</a>
                             <a href="{% url 'users:admin_sua_nhan_khau' nk.id %}" class="btn btn-edit">✏️</a>
                             <a href="{% url 'users:admin_xoa_nhan_khau' nk.id %}" class="btn btn-delete">🗑️</a>
                         </div>

@@ -466,6 +466,11 @@
         </div>
         <div class="section-title">Thành viên trong hộ</div>
         <div class="info-box">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <a href="{% url 'users:chi_tiet_ho_khau_view' ho_gia_dinh.id %}" style="display: inline-block; padding: 15px 40px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px; transition: all 0.3s ease;">
+                    👁️ Xem chi tiết từng thành viên
+                </a>
+            </div>
             <div class="row">
                 {% for tv in thanh_vien_trong_ho %}
                 <div class="info-item">

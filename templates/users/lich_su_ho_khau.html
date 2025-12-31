@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+
+{% block title %}Lịch sử hộ khẩu - {{ ho.ma_ho }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        padding: 40px 20px;
+        border-radius: 15px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(240, 147, 251, 0.3);
+    }
+
+    .page-header h1 {
+        font-size: 32px;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .info-card {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+
+    .info-card h3 {
+        color: #333;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid #f5576c;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .info-item {
+        padding: 10px 0;
+    }
+
+    .info-item label {
+        display: block;
+        color: #666;
+        font-size: 13px;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    .info-item .value {
+        color: #333;
+        font-size: 15px;
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 40px;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e0e0e0;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -33px;
+        top: 20px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #f5576c;
+        border: 3px solid white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .timeline-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .timeline-badge.DoiChuHo {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .timeline-badge.DoiDiaChi {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .timeline-badge.TachHo {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .timeline-badge.Khac {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .timeline-date {
+        color: #999;
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+
+    .timeline-content {
+        color: #333;
+        font-size: 15px;
+        margin-bottom: 10px;
+        line-height: 1.6;
+    }
+
+    .timeline-meta {
+        color: #666;
+        font-size: 13px;
+        border-top: 1px solid #f0f0f0;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+
+    .btn-back {
+        display: inline-block;
+        padding: 12px 30px;
+        background: white;
+        color: #f5576c;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 30px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .members-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .members-table thead {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .members-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .members-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .members-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-primary {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-view-history {
+        padding: 6px 15px;
+        background: #667eea;
+        color: white;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 13px;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .btn-view-history:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>🏠 Lịch sử hộ khẩu</h1>
+        <p>{{ ho.ma_ho }}</p>
+    </div>
+
+    <a href="{% url 'users:ho_khau' %}" class="btn-back">
+        ← Quay lại danh sách hộ khẩu
+    </a>
+
+    <!-- Thông tin hộ khẩu -->
+    <div class="info-card">
+        <h3>🏡 Thông tin hộ gia đình</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <label>Mã hộ:</label>
+                <div class="value">{{ ho.ma_ho }}</div>
+            </div>
+            <div class="info-item">
+                <label>Địa chỉ:</label>
+                <div class="value">{{ ho.dia_chi }}</div>
+            </div>
+            <div class="info-item">
+                <label>Số thành viên:</label>
+                <div class="value">{{ thanh_vien_list.count }} người</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách thành viên -->
+    <div class="info-card">
+        <h3>👥 Danh sách thành viên</h3>
+        <table class="members-table">
+            <thead>
+                <tr>
+                    <th>Họ tên</th>
+                    <th>CCCD</th>
+                    <th>Ngày sinh</th>
+                    <th>Giới tính</th>
+                    <th>Quan hệ với chủ hộ</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tv in thanh_vien_list %}
+                <tr>
+                    <td>
+                        <strong>{{ tv.ho_ten }}</strong>
+                        {% if tv.la_chu_ho %}
+                        <span class="badge badge-primary">Chủ hộ</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ tv.cccd|default:"Chưa có" }}</td>
+                    <td>{{ tv.ngay_sinh|date:"d/m/Y" }}</td>
+                    <td>{{ tv.get_gioi_tinh_display }}</td>
+                    <td>{{ tv.quan_he_chu_ho|default:"Chủ hộ" }}</td>
+                    <td>{{ tv.get_trang_thai_display }}</td>
+                    <td>
+                        <a href="{% url 'users:lich_su_nhan_khau' tv.id %}" class="btn-view-history">
+                            📋 Xem lịch sử
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #999;">Chưa có thành viên nào</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Lịch sử thay đổi hộ -->
+    <div class="info-card">
+        <h3>🕐 Lịch sử thay đổi hộ</h3>
+        
+        {% if lich_su_ho %}
+            <div class="timeline">
+                {% for ls in lich_su_ho %}
+                <div class="timeline-item">
+                    <span class="timeline-badge {{ ls.loai_thay_doi }}">
+                        {% if ls.loai_thay_doi == 'DoiChuHo' %}
+                            👤 Đổi chủ hộ
+                        {% elif ls.loai_thay_doi == 'DoiDiaChi' %}
+                            📍 Đổi địa chỉ
+                        {% elif ls.loai_thay_doi == 'TachHo' %}
+                            🏠 Tách hộ
+                        {% else %}
+                            📝 Khác
+                        {% endif %}
+                    </span>
+                    
+                    <div class="timeline-date">
+                        📅 {{ ls.ngay_thay_doi|date:"d/m/Y" }} (Ghi nhận: {{ ls.ngay_ghi_nhan|date:"d/m/Y H:i" }})
+                    </div>
+                    
+                    <div class="timeline-content">
+                        {{ ls.noi_dung }}
+                    </div>
+                    
+                    <div class="timeline-meta">
+                        👤 Thực hiện bởi: {{ ls.nguoi_thuc_hien.get_full_name|default:ls.nguoi_thuc_hien.username }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>Chưa có lịch sử thay đổi nào</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -157,6 +157,11 @@ class DotPhatThuong(models.Model):
     Quản lý các đợt phát thưởng học tập.
     Cán bộ tạo đợt trước, người dân chọn đợt khi khai báo thành tích.
     """
+    LOAI_DOT = (
+        ('KhenThuong', 'Khen thưởng học tập'),
+        ('LeTet', 'Lễ Tết')
+    )
+    
     TRANG_THAI_DOT = (
         ('DangMo', 'Đang mở - Nhận hồ sơ'),
         ('DaDong', 'Đã đóng - Không nhận thêm'),
@@ -164,9 +169,14 @@ class DotPhatThuong(models.Model):
         ('HoanThanh', 'Hoàn thành')
     )
     
+    loai_dot = models.CharField(max_length=20, choices=LOAI_DOT, default='KhenThuong', verbose_name="Loại đợt")
     ten_dot = models.CharField(max_length=200, verbose_name="Tên đợt phát thưởng")
-    nam_hoc = models.CharField(max_length=20, verbose_name="Năm học (VD: 2024-2025)")
+    nam_hoc = models.CharField(max_length=20, verbose_name="Năm học (VD: 2024-2025)", null=True, blank=True)
     mo_ta = models.TextField(blank=True, verbose_name="Mô tả chi tiết")
+    
+    # Với đợt Lễ Tết: độ tuổi nhận quà
+    tuoi_min = models.IntegerField(null=True, blank=True, verbose_name="Tuổi tối thiểu (cho đợt Lễ Tết)")
+    tuoi_max = models.IntegerField(null=True, blank=True, verbose_name="Tuổi tối đa (cho đợt Lễ Tết)")
     
     ngay_bat_dau = models.DateField(verbose_name="Ngày bắt đầu nhận hồ sơ")
     ngay_ket_thuc = models.DateField(verbose_name="Ngày kết thúc nhận hồ sơ")
@@ -207,7 +217,8 @@ class ThongTinHocTap(models.Model):
     dot_phat_thuong = models.ForeignKey(DotPhatThuong, on_delete=models.CASCADE, null=True, blank=True, related_name='danh_sach_thanh_tich', verbose_name="Đợt phát thưởng")
     
     thanh_vien = models.ForeignKey(ThanhVien, on_delete=models.CASCADE, related_name='thong_tin_hoc_tap', verbose_name="Học sinh")
-    nam_hoc = models.CharField(max_length=20, verbose_name="Năm học (VD: 2024-2025)")
+    ho_ten = models.CharField(max_length=200, verbose_name="Họ tên học sinh", blank=True)
+    nam_hoc = models.CharField(max_length=20, verbose_name="Năm học (VD: 2024-2025)", null=True, blank=True)
     truong = models.CharField(max_length=200, verbose_name="Trường")
     lop = models.CharField(max_length=50, verbose_name="Lớp")
     thanh_tich = models.CharField(max_length=30, choices=LOAI_THANH_TICH, verbose_name="Thành tích")
@@ -373,6 +384,46 @@ class LichSuThayDoiHo(models.Model):
     
     class Meta:
         verbose_name_plural = "Lịch Sử Thay Đổi Hộ"
+        ordering = ['-ngay_thay_doi']
+
+
+class LichSuThayDoiThanhVien(models.Model):
+    """
+    Lưu lịch sử các thay đổi liên quan đến nhân khẩu.
+    Ví dụ: chuyển đi, qua đời, thay đổi thông tin, v.v.
+    """
+    LOAI_THAY_DOI = (
+        ('ThemMoi', 'Thêm mới'),
+        ('ChinhSua', 'Chỉnh sửa thông tin'),
+        ('ChuyenDi', 'Chuyển đi'),
+        ('QuaDoi', 'Qua đời'),
+        ('TachHo', 'Tách hộ'),
+        ('Khac', 'Khác')
+    )
+    
+    thanh_vien = models.ForeignKey(ThanhVien, on_delete=models.CASCADE, related_name='lich_su_thay_doi', verbose_name="Thành viên")
+    loai_thay_doi = models.CharField(max_length=20, choices=LOAI_THAY_DOI, verbose_name="Loại thay đổi")
+    noi_dung = models.TextField(verbose_name="Nội dung thay đổi")
+    ngay_thay_doi = models.DateField(verbose_name="Ngày thay đổi")
+    
+    # Thông tin bổ sung cho trường hợp chuyển đi
+    noi_chuyen_den = models.CharField(max_length=255, blank=True, null=True, verbose_name="Nơi chuyển đến")
+    ghi_chu = models.TextField(blank=True, verbose_name="Ghi chú")
+    
+    nguoi_thuc_hien = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Người thực hiện (admin)"
+    )
+    ngay_ghi_nhan = models.DateTimeField(auto_now_add=True, verbose_name="Ngày ghi nhận vào hệ thống")
+    
+    def __str__(self):
+        return f"{self.get_loai_thay_doi_display()} - {self.thanh_vien.ho_ten} - {self.ngay_thay_doi}"
+    
+    class Meta:
+        verbose_name_plural = "Lịch Sử Thay Đổi Nhân Khẩu"
         ordering = ['-ngay_thay_doi']
 
 

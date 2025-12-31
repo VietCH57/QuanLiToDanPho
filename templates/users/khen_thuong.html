@@ -122,13 +122,20 @@
 
     <div class="card-grid">
         {% if request.user.profile.role == 'admin' or request.user.profile.role == 'citizenship_manager' %}
-        <a href="{% url 'users:admin_quan_ly_phan_thuong' %}" class="feature-card admin">
-            <div class="feature-icon">🎁</div>
-            <h3>Quản lý phần thưởng</h3>
-            <p>Tạo đợt phát thưởng, duyệt thành tích, thống kê</p>
+        <!-- Admin menu -->
+        <a href="{% url 'users:tao_dot_phat_thuong_page' %}" class="feature-card admin">
+            <div class="feature-icon">➕</div>
+            <h3>Tạo đợt phát thưởng</h3>
+            <p>Tạo đợt Khen thưởng hoặc Lễ Tết mới</p>
         </a>
-        {% endif %}
-
+        
+        <a href="{% url 'users:quan_ly_phat_thuong_page' %}" class="feature-card admin">
+            <div class="feature-icon">📊</div>
+            <h3>Quản lý phát thưởng</h3>
+            <p>Xem thống kê và duyệt thành tích theo đợt</p>
+        </a>
+        {% else %}
+        <!-- Citizen menu -->
         <a href="{% url 'users:thanh_tich_hoc_tap' %}" class="feature-card citizen">
             <div class="feature-icon">📚</div>
             <h3>Thành tích học tập</h3>
@@ -140,6 +147,7 @@
             <h3>Phần thưởng của tôi</h3>
             <p>Xem danh sách phần thưởng đã nhận</p>
         </a>
+        {% endif %}
     </div>
 
     <div style="text-align: center;">

@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+
+{% block title %}Duyệt thành tích - {{ dot.ten_dot }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        padding: 40px 20px;
+        border-radius: 15px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(67, 233, 123, 0.3);
+    }
+
+    .page-header h1 {
+        font-size: 36px;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .dot-info {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+
+    .dot-info h3 {
+        color: #333;
+        margin-bottom: 15px;
+    }
+
+    .dot-info p {
+        color: #666;
+        margin: 5px 0;
+    }
+
+    .table-container {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        overflow-x: auto;
+    }
+
+    .table-container h3 {
+        color: #333;
+        font-size: 24px;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid #43e97b;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table thead {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+    }
+
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .data-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 14px;
+    }
+
+    .data-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .badge-approved {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .badge-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .btn-action {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-right: 5px;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #38f9d7 0%, #43e97b 100%);
+        color: white;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(56, 249, 215, 0.4);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    }
+
+    .btn-back {
+        display: inline-block;
+        padding: 12px 30px;
+        background: #667eea;
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+    }
+
+    .alert {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border-left: 4px solid #28a745;
+    }
+
+    .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border-left: 4px solid #dc3545;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 90%;
+    }
+
+    .modal h3 {
+        margin-bottom: 20px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>✅ Duyệt thành tích học tập</h1>
+        <p>{{ dot.ten_dot }}</p>
+    </div>
+
+    <a href="{% url 'users:quan_ly_phat_thuong_page' %}" class="btn-back">
+        ← Quay lại quản lý phát thưởng
+    </a>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="dot-info">
+        <h3>📋 Thông tin đợt phát thưởng</h3>
+        <p><strong>Loại:</strong> 🏆 Khen thưởng học tập</p>
+        <p><strong>Thời gian:</strong> {{ dot.ngay_bat_dau|date:"d/m/Y" }} - {{ dot.ngay_ket_thuc|date:"d/m/Y" }}</p>
+        <p><strong>Trạng thái:</strong> {{ dot.get_trang_thai_display }}</p>
+        {% if dot.mo_ta %}
+        <p><strong>Mô tả:</strong> {{ dot.mo_ta }}</p>
+        {% endif %}
+    </div>
+
+    <div class="table-container">
+        <h3>📝 Danh sách thành tích chờ duyệt ({{ thanh_tich_list|length }})</h3>
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Thành viên</th>
+                    <th>Họ tên học sinh</th>
+                    <th>Trường</th>
+                    <th>Lớp</th>
+                    <th>Thành tích</th>
+                    <th>Minh chứng</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tt in thanh_tich_list %}
+                <tr>
+                    <td><strong>{{ tt.thanh_vien.ho_ten }}</strong></td>
+                    <td>{{ tt.ho_ten|default:tt.thanh_vien.ho_ten }}</td>
+                    <td>{{ tt.truong }}</td>
+                    <td>{{ tt.lop }}</td>
+                    <td>
+                        {% if tt.thanh_tich == 'HocSinhGioi' %}
+                            <span class="badge" style="background: #ff6b6b; color: white;">⭐ Học sinh giỏi</span>
+                        {% elif tt.thanh_tich == 'ThanhTichDacBiet' %}
+                            <span class="badge" style="background: #ffd93d; color: #333;">🏆 Thành tích đặc biệt</span>
+                        {% elif tt.thanh_tich == 'HocSinhTienTien' %}
+                            <span class="badge" style="background: #6bcf7f; color: white;">✨ Học sinh tiên tiến</span>
+                        {% else %}
+                            <span class="badge" style="background: #a8dadc; color: #333;">📚 {{ tt.get_thanh_tich_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if tt.minh_chung %}
+                            <a href="{{ tt.minh_chung.url }}" target="_blank" style="color: #667eea; text-decoration: underline;">
+                                📎 Xem ảnh
+                            </a>
+                        {% else %}
+                            <span style="color: #999;">Không có</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if tt.trang_thai == 'ChoDuyet' %}
+                            <span class="badge badge-pending">⏳ Chờ duyệt</span>
+                        {% elif tt.trang_thai == 'DaDuyet' %}
+                            <span class="badge badge-approved">✅ Đã duyệt</span>
+                        {% else %}
+                            <span class="badge badge-rejected">❌ Từ chối</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if tt.trang_thai == 'ChoDuyet' %}
+                            <form method="POST" action="{% url 'users:duyet_thanh_tich' tt.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="approve">
+                                <button type="submit" class="btn-action btn-success">
+                                    ✅ Duyệt
+                                </button>
+                            </form>
+                            <button class="btn-action btn-danger" onclick="showRejectModal({{ tt.id }})">
+                                ❌ Từ chối
+                            </button>
+                        {% else %}
+                            <span style="color: #999;">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 40px; color: #999;">
+                        Không có thành tích chờ duyệt trong đợt này
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal từ chối -->
+<div id="rejectModal" class="modal">
+    <div class="modal-content">
+        <h3>Lý do từ chối</h3>
+        <form id="rejectForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="reject">
+            <div style="margin-bottom: 20px;">
+                <label>Nhập lý do từ chối:</label>
+                <textarea name="ly_do_tu_choi" class="form-control" rows="4" required></textarea>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn-action btn-danger" style="flex: 1;">
+                    ❌ Xác nhận từ chối
+                </button>
+                <button type="button" class="btn-action" style="flex: 1; background: #95a5a6; color: white;" onclick="closeRejectModal()">
+                    Hủy
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showRejectModal(thanhTichId) {
+    document.getElementById('rejectModal').style.display = 'flex';
+    document.getElementById('rejectForm').action = `/users/duyet-thanh-tich/${thanhTichId}/`;
+}
+
+function closeRejectModal() {
+    document.getElementById('rejectModal').style.display = 'none';
+}
+</script>
+{% endblock %}

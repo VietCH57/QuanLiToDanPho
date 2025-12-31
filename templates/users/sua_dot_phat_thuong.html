@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}Sửa đợt phát thưởng - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px 20px;
+        border-radius: 15px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .page-header h1 {
+        font-size: 36px;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .form-card {
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 600;
+        font-size: 15px;
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .help-text {
+        font-size: 13px;
+        color: #999;
+        margin-top: 5px;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 40px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-back {
+        display: inline-block;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        margin-top: 20px;
+        text-align: center;
+        display: block;
+    }
+
+    .btn-back:hover {
+        text-decoration: underline;
+    }
+
+    .conditional-field {
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+        margin-top: 15px;
+    }
+
+    .alert {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border-left: 4px solid #28a745;
+    }
+
+    .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border-left: 4px solid #dc3545;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+
+    .badge-khenthuong {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .badge-letet {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>✏️ Sửa đợt phát thưởng</h1>
+        <p>Cập nhật thông tin đợt phát thưởng</p>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="form-card">
+        {% if dot.loai_dot == 'KhenThuong' %}
+            <span class="badge badge-khenthuong">🏆 Khen thưởng học tập</span>
+        {% else %}
+            <span class="badge badge-letet">🎉 Lễ Tết</span>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Tên đợt phát thưởng <span style="color: red;">*</span></label>
+                <input type="text" name="ten_dot" class="form-control" value="{{ dot.ten_dot }}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Mô tả chi tiết</label>
+                <textarea name="mo_ta" class="form-control" rows="3" placeholder="Nhập mô tả về đợt phát thưởng này">{{ dot.mo_ta }}</textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Ngày bắt đầu <span style="color: red;">*</span></label>
+                    <input type="date" name="ngay_bat_dau" class="form-control" value="{{ dot.ngay_bat_dau|date:'Y-m-d' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Ngày kết thúc <span style="color: red;">*</span></label>
+                    <input type="date" name="ngay_ket_thuc" class="form-control" value="{{ dot.ngay_ket_thuc|date:'Y-m-d' }}" required>
+                </div>
+            </div>
+
+            {% if dot.loai_dot == 'LeTet' %}
+            <div class="conditional-field">
+                <h4 style="margin-bottom: 15px; color: #333;">⚙️ Cài đặt độ tuổi nhận quà</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tuổi tối thiểu <span style="color: red;">*</span></label>
+                        <input type="number" name="tuoi_min" class="form-control" value="{{ dot.tuoi_min|default:'' }}" min="0" max="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tuổi tối đa <span style="color: red;">*</span></label>
+                        <input type="number" name="tuoi_max" class="form-control" value="{{ dot.tuoi_max|default:'' }}" min="0" max="100">
+                    </div>
+                </div>
+                <div class="help-text">Các trẻ em trong độ tuổi này sẽ tự động được thêm vào danh sách nhận quà</div>
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn-submit">💾 Lưu thay đổi</button>
+        </form>
+
+        <a href="{% url 'users:chi_tiet_dot_phat_thuong' dot.id %}" class="btn-back">← Quay lại chi tiết đợt</a>
+    </div>
+</div>
+{% endblock %}

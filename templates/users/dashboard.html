@@ -74,6 +74,9 @@
         grid-template-columns: repeat(2, 1fr);
         gap: 25px;
         margin-bottom: 25px;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .menu-card {
@@ -246,14 +249,6 @@
             <h3>Khen thưởng</h3>
             <p>Quản lý khen thưởng</p>
         </a>
-
-        {% if is_admin %}
-        <a href="{% url 'users:quan_ly_nguoi_dung' %}" class="menu-card admin">
-            <span class="icon">⚙️</span>
-            <h3>Quản lý người dùng</h3>
-            <p>Quản lý tài khoản và phân quyền</p>
-        </a>
-        {% endif %}
     </div>
 
     <div class="actions">

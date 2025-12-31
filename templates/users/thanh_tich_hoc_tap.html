@@ -331,8 +331,7 @@
         <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
             <strong style="font-size: 16px; color: #333;">{{ dot.ten_dot }}</strong><br>
             <span style="color: #666;">
-                📅 Hạn nộp: {{ dot.ngay_ket_thuc|date:"d/m/Y" }} | 
-                📚 Năm học: {{ dot.nam_hoc }}
+                📅 Hạn nộp: {{ dot.ngay_ket_thuc|date:"d/m/Y" }}
             </span>
             {% if dot.mo_ta %}
             <p style="margin: 10px 0 0 0; color: #666;">{{ dot.mo_ta }}</p>
@@ -360,7 +359,7 @@
         {% for tt in thanh_tich_list %}
         <div class="achievement-card {% if tt.trang_thai == 'ChoDuyet' %}pending{% elif tt.trang_thai == 'DaDuyet' %}approved{% else %}rejected{% endif %}">
             <div class="card-header">
-                <div class="card-title">{{ tt.nam_hoc }}</div>
+                <div class="card-title">{{ tt.ho_ten|default:tt.thanh_vien.ho_ten }}</div>
                 <div>
                     {% if tt.trang_thai == 'ChoDuyet' %}
                         <span class="card-badge badge-pending">⏳ Chờ duyệt</span>
@@ -443,16 +442,16 @@
                 <select name="dot_phat_thuong_id" class="form-select" required>
                     <option value="">-- Chọn đợt phát thưởng --</option>
                     {% for dot in dot_dang_mo %}
-                    <option value="{{ dot.id }}">{{ dot.ten_dot }} ({{ dot.nam_hoc }})</option>
+                    <option value="{{ dot.id }}">{{ dot.ten_dot }}</option>
                     {% endfor %}
                 </select>
-                <div class="help-text">Chọn đợt phát thưởng phù hợp với năm học của bạn</div>
+                <div class="help-text">Chọn đợt phát thưởng phù hợp</div>
             </div>
 
             <div class="form-group">
-                <label>Năm học <span style="color: red;">*</span></label>
-                <input type="text" name="nam_hoc" class="form-control" placeholder="Ví dụ: 2023-2024" required>
-                <div class="help-text">Nhập năm học theo định dạng: 2023-2024</div>
+                <label>Họ tên học sinh <span style="color: red;">*</span></label>
+                <input type="text" name="ho_ten" class="form-control" placeholder="Nhập họ tên học sinh có thành tích" required>
+                <div class="help-text">Nhập họ tên đầy đủ của học sinh</div>
             </div>
 
             <div class="form-group">

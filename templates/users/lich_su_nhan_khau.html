@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+
+{% block title %}Lịch sử nhân khẩu - {{ thanh_vien.ho_ten }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px 20px;
+        border-radius: 15px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .page-header h1 {
+        font-size: 32px;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .info-card {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+
+    .info-card h3 {
+        color: #333;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid #667eea;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .info-item {
+        padding: 10px 0;
+    }
+
+    .info-item label {
+        display: block;
+        color: #666;
+        font-size: 13px;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    .info-item .value {
+        color: #333;
+        font-size: 15px;
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 40px;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e0e0e0;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -33px;
+        top: 20px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #667eea;
+        border: 3px solid white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .timeline-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .timeline-badge.ThemMoi {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .timeline-badge.ChinhSua {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .timeline-badge.ChuyenDi {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .timeline-badge.QuaDoi {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .timeline-badge.TachHo {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .timeline-badge.Khac {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .timeline-date {
+        color: #999;
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+
+    .timeline-content {
+        color: #333;
+        font-size: 15px;
+        margin-bottom: 10px;
+        line-height: 1.6;
+    }
+
+    .timeline-meta {
+        color: #666;
+        font-size: 13px;
+        border-top: 1px solid #f0f0f0;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+
+    .btn-back {
+        display: inline-block;
+        padding: 12px 30px;
+        background: white;
+        color: #667eea;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 30px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>📋 Lịch sử nhân khẩu</h1>
+        <p>{{ thanh_vien.ho_ten }}</p>
+    </div>
+
+    <a href="{% url 'users:nhan_khau' %}" class="btn-back">
+        ← Quay lại danh sách nhân khẩu
+    </a>
+
+    <!-- Thông tin nhân khẩu -->
+    <div class="info-card">
+        <h3>👤 Thông tin cơ bản</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <label>Họ và tên:</label>
+                <div class="value">{{ thanh_vien.ho_ten }}</div>
+            </div>
+            <div class="info-item">
+                <label>CCCD:</label>
+                <div class="value">{{ thanh_vien.cccd|default:"Chưa có" }}</div>
+            </div>
+            <div class="info-item">
+                <label>Ngày sinh:</label>
+                <div class="value">{{ thanh_vien.ngay_sinh|date:"d/m/Y" }}</div>
+            </div>
+            <div class="info-item">
+                <label>Giới tính:</label>
+                <div class="value">{{ thanh_vien.get_gioi_tinh_display }}</div>
+            </div>
+            <div class="info-item">
+                <label>Hộ khẩu:</label>
+                <div class="value">{{ thanh_vien.ho_gia_dinh.ma_ho }} - {{ thanh_vien.ho_gia_dinh.dia_chi }}</div>
+            </div>
+            <div class="info-item">
+                <label>Trạng thái:</label>
+                <div class="value">{{ thanh_vien.get_trang_thai_display }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lịch sử thay đổi -->
+    <div class="info-card">
+        <h3>🕐 Lịch sử thay đổi</h3>
+        
+        {% if lich_su %}
+            <div class="timeline">
+                {% for ls in lich_su %}
+                <div class="timeline-item">
+                    <span class="timeline-badge {{ ls.loai_thay_doi }}">
+                        {% if ls.loai_thay_doi == 'ThemMoi' %}
+                            ➕ Thêm mới
+                        {% elif ls.loai_thay_doi == 'ChinhSua' %}
+                            ✏️ Chỉnh sửa
+                        {% elif ls.loai_thay_doi == 'ChuyenDi' %}
+                            ✈️ Chuyển đi
+                        {% elif ls.loai_thay_doi == 'QuaDoi' %}
+                            ✝️ Qua đời
+                        {% elif ls.loai_thay_doi == 'TachHo' %}
+                            🏠 Tách hộ
+                        {% else %}
+                            📝 Khác
+                        {% endif %}
+                    </span>
+                    
+                    <div class="timeline-date">
+                        📅 {{ ls.ngay_thay_doi|date:"d/m/Y" }} (Ghi nhận: {{ ls.ngay_ghi_nhan|date:"d/m/Y H:i" }})
+                    </div>
+                    
+                    <div class="timeline-content">
+                        {{ ls.noi_dung }}
+                    </div>
+                    
+                    {% if ls.noi_chuyen_den %}
+                    <div class="timeline-content">
+                        <strong>Nơi chuyển đến:</strong> {{ ls.noi_chuyen_den }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if ls.ghi_chu %}
+                    <div class="timeline-content">
+                        <strong>Ghi chú:</strong> {{ ls.ghi_chu }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="timeline-meta">
+                        👤 Thực hiện bởi: {{ ls.nguoi_thuc_hien.get_full_name|default:ls.nguoi_thuc_hien.username }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>Chưa có lịch sử thay đổi nào</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -131,6 +131,22 @@
         color: #2d3436;
     }
 
+    .action-button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .action-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(56, 249, 215, 0.4);
+    }
+
     .empty-state {
         text-align: center;
         padding: 60px 20px;
@@ -206,6 +222,8 @@
                     <th>Đợt phát</th>
                     <th>Ngày nhận</th>
                     <th>Người cấp</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
                 </tr>
             </thead>
             <tbody>
@@ -238,6 +256,25 @@
                     <td>{{ pt.dot_phat|default:"-" }}</td>
                     <td>{{ pt.ngay_cap_phat|date:"d/m/Y" }}</td>
                     <td>{{ pt.nguoi_cap.get_full_name }}</td>
+                    <td>
+                        {% if pt.trang_thai == 'DaNhan' %}
+                            <span class="badge badge-academic" style="background: #d4edda; color: #155724;">✅ Đã nhận</span>
+                        {% else %}
+                            <span class="badge badge-holiday" style="background: #fff3cd; color: #856404;">⏳ Chưa nhận</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if pt.trang_thai == 'ChuaNhan' %}
+                            <form method="POST" action="{% url 'users:xac_nhan_nhan_qua' pt.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-button" style="background: linear-gradient(135deg, #38f9d7 0%, #43e97b 100%);" onclick="return confirm('Xác nhận bạn đã nhận quà này?')">
+                                    ✅ Xác nhận đã nhận
+                                </button>
+                            </form>
+                        {% else %}
+                            <span style="color: #999;">-</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
