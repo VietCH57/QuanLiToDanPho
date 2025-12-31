@@ -21,17 +21,77 @@
         margin-bottom: 10px;
     }
 
-    .placeholder-content {
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        margin-top: 30px;
+    }
+
+    .feature-card {
         background: white;
-        padding: 60px;
+        padding: 30px;
         border-radius: 15px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: block;
+        border: 3px solid transparent;
     }
 
-    .placeholder-icon {
-        font-size: 100px;
-        margin-bottom: 20px;
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .feature-card.admin {
+        border-color: #667eea;
+    }
+
+    .feature-card.admin:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .feature-card.citizen {
+        border-color: #43e97b;
+    }
+
+    .feature-card.citizen:hover {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+    }
+
+    .feature-card.gift {
+        border-color: #f093fb;
+    }
+
+    .feature-card.gift:hover {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .feature-icon {
+        font-size: 60px;
+        margin-bottom: 15px;
+    }
+
+    .feature-card h3 {
+        font-size: 22px;
+        margin-bottom: 10px;
+        color: inherit;
+    }
+
+    .feature-card p {
+        font-size: 14px;
+        color: #666;
+        margin: 0;
+    }
+
+    .feature-card:hover p {
+        color: rgba(255, 255, 255, 0.9);
     }
 
     .btn-back {
@@ -43,6 +103,7 @@
         border-radius: 8px;
         text-decoration: none;
         transition: all 0.3s ease;
+        text-align: center;
     }
 
     .btn-back:hover {
@@ -55,15 +116,33 @@
 {% block content %}
 <div class="page-container">
     <div class="page-header">
-        <h1>🏆 Khen thưởng</h1>
-        <p style="color: #666;">Quản lý khen thưởng</p>
+        <h1>🏆 Hệ thống Khen thưởng</h1>
+        <p style="color: #666;">Quản lý phần thưởng và thành tích học tập</p>
     </div>
 
-    <div class="placeholder-content">
-        <div class="placeholder-icon">🚧</div>
-        <h2 style="color: #333; margin-bottom: 20px;">Trang đang được phát triển</h2>
-        <p style="color: #666; font-size: 18px;">Chức năng quản lý khen thưởng sẽ sớm được cập nhật.</p>
-        
+    <div class="card-grid">
+        {% if request.user.profile.role in 'admin,citizenship_manager' %}
+        <a href="{% url 'users:admin_quan_ly_phan_thuong' %}" class="feature-card admin">
+            <div class="feature-icon">🎁</div>
+            <h3>Quản lý phần thưởng</h3>
+            <p>Tạo đợt phát thưởng, duyệt thành tích, thống kê</p>
+        </a>
+        {% endif %}
+
+        <a href="{% url 'users:thanh_tich_hoc_tap' %}" class="feature-card citizen">
+            <div class="feature-icon">📚</div>
+            <h3>Thành tích học tập</h3>
+            <p>Khai báo và theo dõi thành tích học tập của bạn</p>
+        </a>
+
+        <a href="{% url 'users:phan_thuong_cua_toi' %}" class="feature-card gift">
+            <div class="feature-icon">🎉</div>
+            <h3>Phần thưởng của tôi</h3>
+            <p>Xem danh sách phần thưởng đã nhận</p>
+        </a>
+    </div>
+
+    <div style="text-align: center;">
         <a href="{% url 'users:dashboard' %}" class="btn-back">
             ← Quay lại Trang chủ
         </a>

@@ -152,16 +152,76 @@ class DanhMucPhanThuong(models.Model):
         verbose_name_plural = "Danh Mục Phần Thưởng"
 
 
+class ThongTinHocTap(models.Model):
+    """
+    Lưu thông tin học tập của học sinh để cấp phần thưởng.
+    Người dân có thể gửi thông tin, cán bộ duyệt và cấp thưởng.
+    """
+    LOAI_THANH_TICH = (
+        ('HocSinhGioi', 'Học sinh giỏi'),
+        ('ThanhTichDacBiet', 'Thành tích đặc biệt'),
+        ('HocSinhTienTien', 'Học sinh tiên tiến'),
+        ('Khac', 'Khác')
+    )
+    
+    TRANG_THAI_DUYET = (
+        ('ChoDuyet', 'Chờ duyệt'),
+        ('DaDuyet', 'Đã duyệt'),
+        ('TuChoi', 'Từ chối')
+    )
+    
+    thanh_vien = models.ForeignKey(ThanhVien, on_delete=models.CASCADE, related_name='thong_tin_hoc_tap', verbose_name="Học sinh")
+    nam_hoc = models.CharField(max_length=20, verbose_name="Năm học (VD: 2024-2025)")
+    truong = models.CharField(max_length=200, verbose_name="Trường")
+    lop = models.CharField(max_length=50, verbose_name="Lớp")
+    thanh_tich = models.CharField(max_length=30, choices=LOAI_THANH_TICH, verbose_name="Thành tích")
+    
+    # Minh chứng
+    minh_chung = models.ImageField(upload_to='minh_chung_hoc_tap/', blank=True, null=True, verbose_name="Ảnh giấy khen/bằng khen")
+    
+    # Trạng thái duyệt
+    trang_thai = models.CharField(max_length=20, choices=TRANG_THAI_DUYET, default='ChoDuyet', verbose_name="Trạng thái")
+    nguoi_duyet = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='duyet_hoc_tap', verbose_name="Người duyệt")
+    ngay_duyet = models.DateTimeField(null=True, blank=True, verbose_name="Ngày duyệt")
+    ly_do_tu_choi = models.TextField(blank=True, verbose_name="Lý do từ chối")
+    
+    # Metadata
+    ngay_tao = models.DateTimeField(auto_now_add=True, verbose_name="Ngày gửi")
+    nguoi_tao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='tao_thong_tin_hoc_tap', verbose_name="Người gửi")
+    
+    def __str__(self):
+        return f"{self.thanh_vien.ho_ten} - {self.nam_hoc} - {self.get_thanh_tich_display()}"
+    
+    class Meta:
+        verbose_name_plural = "Thông Tin Học Tập"
+        ordering = ['-ngay_tao']
+
+
 class LichSuPhatThuong(models.Model):
     """
     Lưu vết lịch sử phát quà cho từng cá nhân.
     - Hỗ trợ thống kê tài chính theo 'dot_phat'.
     - Hỗ trợ lưu ảnh minh chứng (giấy khen) để làm bằng chứng (audit).
+    - Liên kết với thông tin học tập (nếu phần thưởng là cho học sinh)
     """
     TRANG_THAI_NHAN = (('ChuaNhan', 'Chưa nhận'), ('DaNhan', 'Đã nhận'))
+    LOAI_PHAT_THUONG = (
+        ('DipLe', 'Dịp lễ (Trung thu, Tết thiếu nhi...)'),
+        ('HocTap', 'Thành tích học tập'),
+        ('Khac', 'Khác')
+    )
 
     thanh_vien = models.ForeignKey(ThanhVien, on_delete=models.CASCADE, related_name='lich_su_nhan_thuong', verbose_name="Người nhận")
     phan_thuong = models.ForeignKey(DanhMucPhanThuong, on_delete=models.CASCADE, verbose_name="Phần thưởng")
+    
+    # Phân loại loại phát thưởng
+    loai_phat_thuong = models.CharField(max_length=20, choices=LOAI_PHAT_THUONG, default='DipLe', verbose_name="Loại phát thưởng")
+    
+    # Liên kết với thông tin học tập (nếu là phần thưởng học tập)
+    thong_tin_hoc_tap = models.ForeignKey(ThongTinHocTap, on_delete=models.SET_NULL, null=True, blank=True, related_name='phan_thuong_nhan', verbose_name="Thông tin học tập")
+    
+    # Số lượng phần thưởng (VD: 10 cuốn vở)
+    so_luong = models.IntegerField(default=1, verbose_name="Số lượng")
     
     # Các trường phục vụ nghiệp vụ Báo cáo & Minh chứng
     dot_phat = models.CharField(max_length=100, verbose_name="Đợt phát (VD: Trung Thu 2025)")
@@ -175,6 +235,10 @@ class LichSuPhatThuong(models.Model):
 
     def __str__(self):
         return f"{self.dot_phat}: {self.thanh_vien.ho_ten}"
+    
+    def tong_gia_tri(self):
+        """Tính tổng giá trị = số lượng * đơn giá"""
+        return self.so_luong * self.phan_thuong.gia_tri
 
     class Meta:
         verbose_name_plural = "Lịch Sử Phát Thưởng"

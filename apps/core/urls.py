@@ -6,7 +6,7 @@ from .api_views import (
     HoGiaDinhViewSet, ThanhVienViewSet, 
     DanhMucPhanThuongViewSet, LichSuPhatThuongViewSet, 
     TamTruViewSet, TamVangViewSet, UserManagementViewSet,
-    DashboardView
+    DashboardView, ThongTinHocTapViewSet
 )
 
 # 2. Import các Views XÁC THỰC từ views_auth.py (MỚI)
@@ -27,6 +27,7 @@ router.register(r'thanh-vien', ThanhVienViewSet, basename='thanhvien')
 # ==========================================================
 #  NHÓM 2: QUẢN LÝ KHEN THƯỞNG
 # ==========================================================
+router.register(r'thong-tin-hoc-tap', ThongTinHocTapViewSet, basename='thongtinhoctap')
 router.register(r'danh-muc-phan-thuong', DanhMucPhanThuongViewSet, basename='phanthuong')
 router.register(r'lich-su-phan-thuong', LichSuPhatThuongViewSet, basename='lichsu')
 

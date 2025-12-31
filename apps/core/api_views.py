@@ -26,12 +26,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 # Local Imports (Giữ nguyên code cũ của bạn)
 from .models import (
     HoGiaDinh, ThanhVien, DanhMucPhanThuong, 
-    LichSuPhatThuong, TamTru, TamVang
+    LichSuPhatThuong, TamTru, TamVang, ThongTinHocTap
 )
 from .serializers import (
     HoGiaDinhSerializer, ThanhVienSerializer, 
     DanhMucPhanThuongSerializer, LichSuPhatThuongSerializer, 
-    TamTruSerializer, TamVangSerializer, UserManagementSerializer
+    TamTruSerializer, TamVangSerializer, UserManagementSerializer,
+    ThongTinHocTapSerializer
 )
 from .permissions import IsToTruong, IsAdminOrToTruong, IsCanBo
 
@@ -396,6 +397,56 @@ class ThanhVienViewSet(viewsets.ModelViewSet):
 #  PHẦN 6: QUẢN LÝ KHEN THƯỞNG
 # ==========================================================
 
+class ThongTinHocTapViewSet(viewsets.ModelViewSet):
+    """API quản lý thông tin học tập"""
+    queryset = ThongTinHocTap.objects.select_related('thanh_vien', 'nguoi_duyet').all().order_by('-ngay_tao')
+    serializer_class = ThongTinHocTapSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        """Người dân chỉ xem của mình, admin/manager xem tất cả"""
+        user = self.request.user
+        if user.is_staff or user.is_superuser:
+            return self.queryset
+        
+        # Người dân chỉ xem thông tin của bản thân
+        try:
+            thanh_vien = ThanhVien.objects.get(user=user)
+            return self.queryset.filter(thanh_vien=thanh_vien)
+        except ThanhVien.DoesNotExist:
+            return self.queryset.none()
+    
+    def perform_create(self, serializer):
+        """Ghi nhận người tạo"""
+        serializer.save(nguoi_tao=self.request.user)
+    
+    @action(detail=True, methods=['post'], url_path='duyet')
+    def duyet(self, request, pk=None):
+        """Duyệt hoặc từ chối thông tin học tập"""
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"detail": "Chỉ cán bộ mới có quyền duyệt"}, status=403)
+        
+        thong_tin = self.get_object()
+        trang_thai = request.data.get('trang_thai')  # 'DaDuyet' hoặc 'TuChoi'
+        ly_do = request.data.get('ly_do_tu_choi', '')
+        
+        if trang_thai in ['DaDuyet', 'TuChoi']:
+            from django.utils import timezone
+            thong_tin.trang_thai = trang_thai
+            thong_tin.nguoi_duyet = request.user
+            thong_tin.ngay_duyet = timezone.now()
+            if trang_thai == 'TuChoi':
+                thong_tin.ly_do_tu_choi = ly_do
+            thong_tin.save()
+            
+            return Response({
+                "message": f"Đã {thong_tin.get_trang_thai_display()}",
+                "trang_thai": trang_thai
+            })
+        
+        return Response({"error": "Trạng thái không hợp lệ"}, status=400)
+
+
 class DanhMucPhanThuongViewSet(viewsets.ModelViewSet):
     queryset = DanhMucPhanThuong.objects.all().order_by('ten_phan_thuong')
     serializer_class = DanhMucPhanThuongSerializer
@@ -404,7 +455,7 @@ class DanhMucPhanThuongViewSet(viewsets.ModelViewSet):
 
 class LichSuPhatThuongViewSet(viewsets.ModelViewSet):
     """API Quản lý phát quà (Gợi ý & Thống kê)."""
-    queryset = LichSuPhatThuong.objects.select_related('thanh_vien', 'phan_thuong').all().order_by('-ngay_cap_phat')
+    queryset = LichSuPhatThuong.objects.select_related('thanh_vien', 'phan_thuong', 'thong_tin_hoc_tap').all().order_by('-ngay_cap_phat')
     serializer_class = LichSuPhatThuongSerializer
     permission_classes = [IsCanBo]
 
@@ -413,31 +464,65 @@ class LichSuPhatThuongViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='goi-y-danh-sach')
     def goi_y_danh_sach(self, request):
-        loai = request.query_params.get('loai', 'TrungThu')
+        """
+        Gợi ý danh sách nhận quà theo loại
+        - loai=TrungThu: Trẻ em 0-18 tuổi
+        - loai=HocSinh: Học sinh 6-18 tuổi  
+        - loai=HocTap: Học sinh có thành tích (từ ThongTinHocTap đã duyệt)
+        """
+        loại = request.query_params.get('loai', 'TrungThu')
         today = date.today()
         danh_sach = []
-        all_members = ThanhVien.objects.filter(trang_thai='ThuongTru')
 
-        for tv in all_members:
-            tuoi = today.year - tv.ngay_sinh.year - ((today.month, today.day) < (tv.ngay_sinh.month, tv.ngay_sinh.day))
-            is_eligible = False
-            ly_do = ""
+        if loai in ['TrungThu', 'HocSinh']:
+            all_members = ThanhVien.objects.filter(trang_thai='ThuongTru')
 
-            if loai == 'TrungThu' and 0 <= tuoi <= 15:
-                is_eligible = True
-                ly_do = f"Trẻ em {tuoi} tuổi"
-            elif loai == 'HocSinh' and 6 <= tuoi <= 18:
-                is_eligible = True
-                ly_do = f"Học sinh {tuoi} tuổi"
+            for tv in all_members:
+                tuoi = today.year - tv.ngay_sinh.year - ((today.month, today.day) < (tv.ngay_sinh.month, tv.ngay_sinh.day))
+                is_eligible = False
+                ly_do = ""
 
-            if is_eligible:
+                if loai == 'TrungThu' and 0 <= tuoi <= 18:
+                    is_eligible = True
+                    ly_do = f"Trẻ em {tuoi} tuổi"
+                elif loai == 'HocSinh' and 6 <= tuoi <= 18:
+                    is_eligible = True
+                    ly_do = f"Học sinh {tuoi} tuổi"
+
+                if is_eligible:
+                    danh_sach.append({
+                        "id": tv.id,
+                        "ho_ten": tv.ho_ten,
+                        "ngay_sinh": tv.ngay_sinh,
+                        "tuoi": tuoi,
+                        "ho_gia_dinh": tv.ho_gia_dinh.ma_ho,
+                        "ly_do_de_xuat": ly_do
+                    })
+        
+        elif loai == 'HocTap':
+            # Gợi ý từ thông tin học tập đã duyệt
+            thong_tin_da_duyet = ThongTinHocTap.objects.filter(
+                trang_thai='DaDuyet'
+            ).select_related('thanh_vien', 'thanh_vien__ho_gia_dinh')
+            
+            for tt in thong_tin_da_duyet:
+                # Xác định số lượng vở theo thành tích
+                so_luong_vo = 5  # Mặc định
+                if tt.thanh_tich in ['HocSinhGioi', 'ThanhTichDacBiet']:
+                    so_luong_vo = 10
+                elif tt.thanh_tich == 'HocSinhTienTien':
+                    so_luong_vo = 7
+                
                 danh_sach.append({
-                    "id": tv.id,
-                    "ho_ten": tv.ho_ten,
-                    "ngay_sinh": tv.ngay_sinh,
-                    "tuoi": tuoi,
-                    "ho_gia_dinh": tv.ho_gia_dinh.ma_ho,
-                    "ly_do_de_xuat": ly_do
+                    "id": tt.thanh_vien.id,
+                    "ho_ten": tt.thanh_vien.ho_ten,
+                    "ho_gia_dinh": tt.thanh_vien.ho_gia_dinh.ma_ho,
+                    "truong": tt.truong,
+                    "lop": tt.lop,
+                    "thanh_tich": tt.get_thanh_tich_display(),
+                    "so_luong_vo": so_luong_vo,
+                    "thong_tin_hoc_tap_id": tt.id,
+                    "ly_do_de_xuat": f"{tt.get_thanh_tich_display()} - {so_luong_vo} cuốn vở"
                 })
 
         return Response({
@@ -445,26 +530,174 @@ class LichSuPhatThuongViewSet(viewsets.ModelViewSet):
             "so_luong_de_xuat": len(danh_sach),
             "danh_sach": danh_sach
         })
+    
+    @action(detail=False, methods=['post'], url_path='tao-dot-phat')
+    def tao_dot_phat(self, request):
+        """
+        Tạo đợt phát thưởng hàng loạt
+        Request: {
+            "dot_phat": "Trung Thu 2025",
+            "loai_phat_thuong": "DipLe",
+            "phan_thuong_id": 1,
+            "thanh_vien_ids": [1, 2, 3],
+            "so_luong": 1,
+            "ghi_chu": "..."
+        }
+        """
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"detail": "Chỉ cán bộ mới có quyền tạo đợt phát"}, status=403)
+        
+        dot_phat = request.data.get('dot_phat')
+        loai_phat_thuong = request.data.get('loai_phat_thuong', 'DipLe')
+        phan_thuong_id = request.data.get('phan_thuong_id')
+        thanh_vien_ids = request.data.get('thanh_vien_ids', [])
+        so_luong = request.data.get('so_luong', 1)
+        ghi_chu = request.data.get('ghi_chu', '')
+        
+        if not dot_phat or not phan_thuong_id or not thanh_vien_ids:
+            return Response({"error": "Thiếu thông tin bắt buộc"}, status=400)
+        
+        try:
+            phan_thuong = DanhMucPhanThuong.objects.get(id=phan_thuong_id)
+            thanh_vien_list = ThanhVien.objects.filter(id__in=thanh_vien_ids)
+            
+            created_count = 0
+            for tv in thanh_vien_list:
+                LichSuPhatThuong.objects.create(
+                    thanh_vien=tv,
+                    phan_thuong=phan_thuong,
+                    loai_phat_thuong=loai_phat_thuong,
+                    so_luong=so_luong,
+                    dot_phat=dot_phat,
+                    nguoi_cap=request.user,
+                    ghi_chu=ghi_chu
+                )
+                created_count += 1
+            
+            return Response({
+                "message": f"Đã tạo {created_count} phần thưởng",
+                "dot_phat": dot_phat
+            }, status=201)
+            
+        except DanhMucPhanThuong.DoesNotExist:
+            return Response({"error": "Phần thưởng không tồn tại"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+    
+    @action(detail=False, methods=['post'], url_path='phat-thuong-hoc-tap')
+    def phat_thuong_hoc_tap(self, request):
+        """
+        Phát thưởng học tập dựa trên ThongTinHocTap đã duyệt
+        Request: {
+            "dot_phat": "Năm học 2024-2025",
+            "phan_thuong_id": 1,
+            "thong_tin_hoc_tap_ids": [1, 2, 3]
+        }
+        """
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"detail": "Chỉ cán bộ mới có quyền phát thưởng"}, status=403)
+        
+        dot_phat = request.data.get('dot_phat')
+        phan_thuong_id = request.data.get('phan_thuong_id')
+        thong_tin_ids = request.data.get('thong_tin_hoc_tap_ids', [])
+        
+        if not all([dot_phat, phan_thuong_id, thong_tin_ids]):
+            return Response({"error": "Thiếu thông tin bắt buộc"}, status=400)
+        
+        try:
+            phan_thuong = DanhMucPhanThuong.objects.get(id=phan_thuong_id)
+            thong_tin_list = ThongTinHocTap.objects.filter(
+                id__in=thong_tin_ids,
+                trang_thai='DaDuyet'
+            ).select_related('thanh_vien')
+            
+            created_count = 0
+            for tt in thong_tin_list:
+                # Xác định số lượng vở
+                so_luong = 5
+                if tt.thanh_tich in ['HocSinhGioi', 'ThanhTichDacBiet']:
+                    so_luong = 10
+                elif tt.thanh_tich == 'HocSinhTienTien':
+                    so_luong = 7
+                
+                LichSuPhatThuong.objects.create(
+                    thanh_vien=tt.thanh_vien,
+                    phan_thuong=phan_thuong,
+                    loai_phat_thuong='HocTap',
+                    thong_tin_hoc_tap=tt,
+                    so_luong=so_luong,
+                    dot_phat=dot_phat,
+                    nguoi_cap=request.user,
+                    ghi_chu=f"{tt.get_thanh_tich_display()} - {tt.truong}"
+                )
+                created_count += 1
+            
+            return Response({
+                "message": f"Đã tạo {created_count} phần thưởng học tập",
+                "dot_phat": dot_phat
+            }, status=201)
+            
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
 
     @action(detail=False, methods=['get'], url_path='thong-ke')
     def thong_ke(self, request):
+        """
+        Thống kê phần thưởng
+        - Theo đợt phát: ?dot_phat=...
+        - Theo hộ gia đình: ?ho_gia_dinh_id=...
+        - Danh sách các đợt: không truyền gì
+        """
         dot_phat = request.query_params.get('dot_phat')
-        if not dot_phat:
+        ho_gia_dinh_id = request.query_params.get('ho_gia_dinh_id')
+        
+        if dot_phat:
+            # Thống kê theo đợt
+            records = LichSuPhatThuong.objects.filter(dot_phat=dot_phat).select_related('phan_thuong')
+            tong_tien = sum([r.tong_gia_tri() for r in records])
+            so_luong = records.count()
+            da_nhan = records.filter(trang_thai='DaNhan').count()
+
+            return Response({
+                "dot_phat": dot_phat,
+                "tong_so_suat_qua": so_luong,
+                "da_phat": da_nhan,
+                "chua_phat": so_luong - da_nhan,
+                "tong_gia_tri": f"{tong_tien:,.0f} VNĐ"
+            })
+        
+        elif ho_gia_dinh_id:
+            # Thống kê theo hộ
+            thanh_vien_ids = ThanhVien.objects.filter(ho_gia_dinh_id=ho_gia_dinh_id).values_list('id', flat=True)
+            records = LichSuPhatThuong.objects.filter(
+                thanh_vien_id__in=thanh_vien_ids
+            ).select_related('thanh_vien', 'phan_thuong')
+            
+            danh_sach = []
+            tong_gia_tri = 0
+            for r in records:
+                gia_tri = r.tong_gia_tri()
+                tong_gia_tri += gia_tri
+                danh_sach.append({
+                    "nguoi_nhan": r.thanh_vien.ho_ten,
+                    "phan_thuong": r.phan_thuong.ten_phan_thuong,
+                    "so_luong": r.so_luong,
+                    "gia_tri": gia_tri,
+                    "dot_phat": r.dot_phat,
+                    "trang_thai": r.get_trang_thai_display()
+                })
+            
+            return Response({
+                "ho_gia_dinh_id": ho_gia_dinh_id,
+                "tong_so_phan_thuong": len(danh_sach),
+                "tong_gia_tri": f"{tong_gia_tri:,.0f} VNĐ",
+                "danh_sach": danh_sach
+            })
+        
+        else:
+            # Danh sách các đợt phát
             cac_dot = LichSuPhatThuong.objects.values_list('dot_phat', flat=True).distinct()
-            return Response({"cac_dot_phat_hien_co": cac_dot})
-
-        records = LichSuPhatThuong.objects.filter(dot_phat=dot_phat)
-        tong_tien = records.aggregate(Sum('phan_thuong__gia_tri'))['phan_thuong__gia_tri__sum'] or 0
-        so_luong = records.count()
-        da_nhan = records.filter(trang_thai='DaNhan').count()
-
-        return Response({
-            "dot_phat": dot_phat,
-            "tong_so_suat_qua": so_luong,
-            "da_phat": da_nhan,
-            "chua_phat": so_luong - da_nhan,
-            "tong_gia_tri_uoc_tinh": f"{tong_tien:,.0f} VNĐ"
-        })
+            return Response({"cac_dot_phat_hien_co": list(cac_dot)})
 
 
 # ==========================================================

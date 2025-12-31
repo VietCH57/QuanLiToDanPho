@@ -1,0 +1,473 @@
+{% extends 'base.html' %}
+
+{% block title %}Thành tích học tập - Hệ thống Quản lý{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        padding: 40px 20px;
+        border-radius: 15px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(67, 233, 123, 0.3);
+    }
+
+    .page-header h1 {
+        font-size: 36px;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+        justify-content: center;
+    }
+
+    .btn-action {
+        padding: 15px 30px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-add {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-add:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .card-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 25px;
+        margin-top: 30px;
+    }
+
+    .achievement-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border-left: 5px solid;
+    }
+
+    .achievement-card.pending {
+        border-left-color: #ffd93d;
+    }
+
+    .achievement-card.approved {
+        border-left-color: #6bcf7f;
+    }
+
+    .achievement-card.rejected {
+        border-left-color: #ff6b6b;
+    }
+
+    .achievement-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .card-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .card-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-pending {
+        background: #ffd93d;
+        color: #333;
+    }
+
+    .badge-approved {
+        background: #6bcf7f;
+        color: white;
+    }
+
+    .badge-rejected {
+        background: #ff6b6b;
+        color: white;
+    }
+
+    .card-info {
+        margin-bottom: 10px;
+        color: #666;
+        font-size: 14px;
+    }
+
+    .card-info strong {
+        color: #333;
+        font-weight: 600;
+    }
+
+    .card-image {
+        margin: 15px 0;
+        text-align: center;
+    }
+
+    .card-image img {
+        max-width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .card-image a {
+        color: #667eea;
+        text-decoration: underline;
+        font-weight: 600;
+    }
+
+    .card-footer {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 2px solid #f0f0f0;
+        font-size: 13px;
+        color: #999;
+    }
+
+    .alert {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border-left: 4px solid #28a745;
+    }
+
+    .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border-left: 4px solid #dc3545;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    .empty-state-icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        color: #666;
+        font-size: 16px;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-header {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        color: #333;
+        font-size: 24px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(67, 233, 123, 0.4);
+    }
+
+    .btn-cancel {
+        background: #95a5a6;
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .btn-cancel:hover {
+        background: #7f8c8d;
+    }
+
+    .help-text {
+        font-size: 12px;
+        color: #999;
+        margin-top: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>🏆 Thành tích học tập của tôi</h1>
+        <p>Khai báo và theo dõi thành tích học tập</p>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="action-buttons">
+        <button class="btn-action btn-add" onclick="openAddModal()">
+            ➕ Khai báo thành tích mới
+        </button>
+    </div>
+
+    {% if thanh_tich_list %}
+    <div class="card-container">
+        {% for tt in thanh_tich_list %}
+        <div class="achievement-card {% if tt.trang_thai == 'ChoDuyet' %}pending{% elif tt.trang_thai == 'DaDuyet' %}approved{% else %}rejected{% endif %}">
+            <div class="card-header">
+                <div class="card-title">{{ tt.nam_hoc }}</div>
+                <div>
+                    {% if tt.trang_thai == 'ChoDuyet' %}
+                        <span class="card-badge badge-pending">⏳ Chờ duyệt</span>
+                    {% elif tt.trang_thai == 'DaDuyet' %}
+                        <span class="card-badge badge-approved">✅ Đã duyệt</span>
+                    {% else %}
+                        <span class="card-badge badge-rejected">❌ Từ chối</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card-info">
+                <strong>Trường:</strong> {{ tt.truong }}
+            </div>
+            <div class="card-info">
+                <strong>Lớp:</strong> {{ tt.lop }}
+            </div>
+            <div class="card-info">
+                <strong>Thành tích:</strong> 
+                {% if tt.thanh_tich == 'HocSinhGioi' %}
+                    ⭐ Học sinh giỏi
+                {% elif tt.thanh_tich == 'ThanhTichDacBiet' %}
+                    🏆 Thành tích đặc biệt
+                {% elif tt.thanh_tich == 'HocSinhTienTien' %}
+                    ✨ Học sinh tiên tiến
+                {% else %}
+                    📚 {{ tt.get_thanh_tich_display }}
+                {% endif %}
+            </div>
+
+            {% if tt.minh_chung %}
+            <div class="card-image">
+                <a href="{{ tt.minh_chung.url }}" target="_blank">
+                    📎 Xem minh chứng
+                </a>
+            </div>
+            {% endif %}
+
+            {% if tt.trang_thai == 'TuChoi' and tt.ly_do_tu_choi %}
+            <div class="card-info" style="color: #e74c3c; background: #fff5f5; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                <strong>Lý do từ chối:</strong><br>
+                {{ tt.ly_do_tu_choi }}
+            </div>
+            {% endif %}
+
+            <div class="card-footer">
+                Khai báo ngày: {{ tt.ngay_tao|date:"d/m/Y H:i" }}
+                {% if tt.trang_thai != 'ChoDuyet' %}
+                    <br>Duyệt bởi: {{ tt.nguoi_duyet.get_full_name }} - {{ tt.ngay_duyet|date:"d/m/Y" }}
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📚</div>
+        <h3>Chưa có thành tích nào</h3>
+        <p>Hãy khai báo thành tích học tập của bạn để nhận phần thưởng!</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal thêm thành tích -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📝 Khai báo thành tích học tập</h3>
+        </div>
+
+        <form method="POST" action="{% url 'users:gui_thanh_tich' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Năm học <span style="color: red;">*</span></label>
+                <input type="text" name="nam_hoc" class="form-control" placeholder="Ví dụ: 2023-2024" required>
+                <div class="help-text">Nhập năm học theo định dạng: 2023-2024</div>
+            </div>
+
+            <div class="form-group">
+                <label>Trường <span style="color: red;">*</span></label>
+                <input type="text" name="truong" class="form-control" placeholder="Ví dụ: THCS Nguyễn Du" required>
+            </div>
+
+            <div class="form-group">
+                <label>Lớp <span style="color: red;">*</span></label>
+                <input type="text" name="lop" class="form-control" placeholder="Ví dụ: 7A1" required>
+            </div>
+
+            <div class="form-group">
+                <label>Thành tích <span style="color: red;">*</span></label>
+                <select name="thanh_tich" class="form-select" required>
+                    <option value="">-- Chọn thành tích --</option>
+                    <option value="HocSinhGioi">⭐ Học sinh giỏi (10 quyển vở)</option>
+                    <option value="ThanhTichDacBiet">🏆 Thành tích đặc biệt (10 quyển vở)</option>
+                    <option value="HocSinhTienTien">✨ Học sinh tiên tiến (7 quyển vở)</option>
+                    <option value="Khac">📚 Khác (5 quyển vở)</option>
+                </select>
+                <div class="help-text">Chọn thành tích phù hợp với giấy khen/bằng của bạn</div>
+            </div>
+
+            <div class="form-group">
+                <label>Minh chứng (Ảnh giấy khen/bằng) <span style="color: red;">*</span></label>
+                <input type="file" name="minh_chung" class="form-control" accept="image/*" required>
+                <div class="help-text">Chụp ảnh rõ nét giấy khen hoặc bằng khen của bạn</div>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                🎯 Gửi khai báo
+            </button>
+            <button type="button" class="btn-cancel" onclick="closeAddModal()">
+                Hủy
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAddModal() {
+    document.getElementById('addModal').style.display = 'flex';
+}
+
+function closeAddModal() {
+    document.getElementById('addModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('addModal');
+    if (event.target == modal) {
+        closeAddModal();
+    }
+}
+</script>
+{% endblock %}

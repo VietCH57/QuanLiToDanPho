@@ -810,3 +810,288 @@ def admin_them_ho_khau(request):
             messages.success(request, 'Đã thêm hộ khẩu mới!')
             return redirect('users:ho_khau')
     return render(request, 'users/admin_them_ho_khau.html')
+
+# --- ADMIN: Quản lý phần thưởng ---
+@login_required
+def admin_quan_ly_phan_thuong(request):
+    """Trang quản lý phần thưởng cho admin"""
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    
+    from apps.core.models import LichSuPhatThuong, ThongTinHocTap, DanhMucPhanThuong
+    from django.db.models import Sum, Count
+    
+    # Lấy danh sách lịch sử phát thưởng
+    lich_su_list = LichSuPhatThuong.objects.select_related(
+        'thanh_vien', 'phan_thuong', 'nguoi_cap', 'thong_tin_hoc_tap'
+    ).order_by('-ngay_cap_phat')
+    
+    # Lấy danh sách thành tích chờ duyệt
+    thanh_tich_list = ThongTinHocTap.objects.filter(
+        trang_thai='ChoDuyet'
+    ).select_related('thanh_vien', 'nguoi_tao').order_by('-ngay_tao')
+    
+    # Lấy danh mục phần thưởng
+    danh_muc_list = DanhMucPhanThuong.objects.all()
+    
+    # Thống kê
+    tong_phat_thuong = LichSuPhatThuong.objects.count()
+    tong_gia_tri = LichSuPhatThuong.objects.aggregate(
+        total=Sum('phan_thuong__gia_tri')
+    )['total'] or 0
+    
+    pending_count = ThongTinHocTap.objects.filter(trang_thai='ChoDuyet').count()
+    approved_count = ThongTinHocTap.objects.filter(trang_thai='DaDuyet').count()
+    
+    context = {
+        'lich_su_list': lich_su_list,
+        'thanh_tich_list': thanh_tich_list,
+        'danh_muc_list': danh_muc_list,
+        'tong_phat_thuong': tong_phat_thuong,
+        'tong_gia_tri': tong_gia_tri,
+        'pending_count': pending_count,
+        'approved_count': approved_count,
+    }
+    
+    return render(request, 'users/admin_quan_ly_phan_thuong.html', context)
+
+@login_required
+def tao_dot_phat_thuong(request):
+    """Tạo đợt phát thưởng theo dịp lễ"""
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    
+    if request.method != 'POST':
+        return redirect('users:admin_quan_ly_phan_thuong')
+    
+    from apps.core.models import LichSuPhatThuong, DanhMucPhanThuong
+    import requests
+    
+    loai_dip = request.POST.get('loai_dip')
+    phan_thuong_id = request.POST.get('phan_thuong_id')
+    dot_phat = request.POST.get('dot_phat')
+    so_luong = int(request.POST.get('so_luong', 1))
+    ghi_chu = request.POST.get('ghi_chu', '')
+    thanh_vien_ids = request.POST.getlist('thanh_vien_ids')
+    
+    if not thanh_vien_ids:
+        messages.error(request, 'Không có thành viên nào được chọn!')
+        return redirect('users:admin_quan_ly_phan_thuong')
+    
+    try:
+        phan_thuong = DanhMucPhanThuong.objects.get(id=phan_thuong_id)
+        
+        # Tạo phát thưởng cho từng thành viên
+        created_count = 0
+        for tv_id in thanh_vien_ids:
+            LichSuPhatThuong.objects.create(
+                thanh_vien_id=tv_id,
+                phan_thuong=phan_thuong,
+                loai_phat_thuong='DipLe',
+                so_luong=so_luong,
+                dot_phat=dot_phat,
+                ghi_chu=ghi_chu,
+                nguoi_cap=request.user
+            )
+            created_count += 1
+        
+        messages.success(request, f'Đã tạo đợt phát thưởng cho {created_count} người!')
+    except Exception as e:
+        messages.error(request, f'Có lỗi xảy ra: {str(e)}')
+    
+    return redirect('users:admin_quan_ly_phan_thuong')
+
+@login_required
+def phat_thuong_hoc_tap(request):
+    """Phát thưởng cho thành tích học tập đã duyệt"""
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    
+    if request.method != 'POST':
+        return redirect('users:admin_quan_ly_phan_thuong')
+    
+    from apps.core.models import LichSuPhatThuong, DanhMucPhanThuong, ThongTinHocTap
+    
+    phan_thuong_id = request.POST.get('phan_thuong_id')
+    dot_phat = request.POST.get('dot_phat')
+    ghi_chu = request.POST.get('ghi_chu', '')
+    thong_tin_hoc_tap_ids = request.POST.getlist('thong_tin_hoc_tap_ids')
+    
+    if not thong_tin_hoc_tap_ids:
+        messages.error(request, 'Không có thành tích nào được chọn!')
+        return redirect('users:admin_quan_ly_phan_thuong')
+    
+    try:
+        phan_thuong = DanhMucPhanThuong.objects.get(id=phan_thuong_id)
+        
+        # Tạo phát thưởng cho từng thành tích
+        created_count = 0
+        for tt_id in thong_tin_hoc_tap_ids:
+            tt = ThongTinHocTap.objects.get(id=tt_id)
+            
+            # Tính số lượng vở dựa trên thành tích
+            so_luong = 5  # Mặc định
+            if tt.thanh_tich in ['HocSinhGioi', 'ThanhTichDacBiet']:
+                so_luong = 10
+            elif tt.thanh_tich == 'HocSinhTienTien':
+                so_luong = 7
+            
+            LichSuPhatThuong.objects.create(
+                thanh_vien=tt.thanh_vien,
+                phan_thuong=phan_thuong,
+                loai_phat_thuong='HocTap',
+                thong_tin_hoc_tap=tt,
+                so_luong=so_luong,
+                dot_phat=dot_phat,
+                ghi_chu=ghi_chu,
+                nguoi_cap=request.user
+            )
+            created_count += 1
+        
+        messages.success(request, f'Đã phát thưởng học tập cho {created_count} thành tích!')
+    except Exception as e:
+        messages.error(request, f'Có lỗi xảy ra: {str(e)}')
+    
+    return redirect('users:admin_quan_ly_phan_thuong')
+
+@login_required
+def duyet_thanh_tich(request, thanh_tich_id):
+    """Duyệt hoặc từ chối thành tích học tập"""
+    if not request.user.profile.role in ['admin', 'citizenship_manager']:
+        return HttpResponseForbidden()
+    
+    if request.method != 'POST':
+        return redirect('users:admin_quan_ly_phan_thuong')
+    
+    from apps.core.models import ThongTinHocTap
+    from django.utils import timezone
+    
+    try:
+        tt = ThongTinHocTap.objects.get(id=thanh_tich_id)
+        action = request.POST.get('action')
+        
+        if action == 'approve':
+            tt.trang_thai = 'DaDuyet'
+            tt.nguoi_duyet = request.user
+            tt.ngay_duyet = timezone.now().date()
+            tt.save()
+            messages.success(request, f'Đã duyệt thành tích của {tt.thanh_vien.ho_ten}!')
+        
+        elif action == 'reject':
+            ly_do = request.POST.get('ly_do_tu_choi', '')
+            tt.trang_thai = 'TuChoi'
+            tt.nguoi_duyet = request.user
+            tt.ngay_duyet = timezone.now().date()
+            tt.ly_do_tu_choi = ly_do
+            tt.save()
+            messages.warning(request, f'Đã từ chối thành tích của {tt.thanh_vien.ho_ten}!')
+    
+    except Exception as e:
+        messages.error(request, f'Có lỗi xảy ra: {str(e)}')
+    
+    return redirect('users:admin_quan_ly_phan_thuong')
+
+# --- CITIZEN: Gửi thành tích học tập ---
+@login_required
+def thanh_tich_hoc_tap_view(request):
+    """Trang xem và gửi thành tích học tập của citizen"""
+    if not hasattr(request.user, 'profile'):
+        return HttpResponseForbidden()
+    
+    from apps.core.models import ThongTinHocTap, ThanhVien
+    
+    # Tìm thành viên tương ứng với user
+    try:
+        thanh_vien = ThanhVien.objects.get(cccd=request.user.username)
+    except ThanhVien.DoesNotExist:
+        messages.error(request, 'Không tìm thấy thông tin nhân khẩu của bạn!')
+        return redirect('users:dashboard')
+    
+    # Lấy danh sách thành tích của thành viên này
+    thanh_tich_list = ThongTinHocTap.objects.filter(
+        thanh_vien=thanh_vien
+    ).order_by('-ngay_tao')
+    
+    context = {
+        'thanh_tich_list': thanh_tich_list,
+        'thanh_vien': thanh_vien,
+    }
+    
+    return render(request, 'users/thanh_tich_hoc_tap.html', context)
+
+@login_required
+def gui_thanh_tich(request):
+    """Gửi thành tích học tập mới"""
+    if request.method != 'POST':
+        return redirect('users:thanh_tich_hoc_tap')
+    
+    from apps.core.models import ThongTinHocTap, ThanhVien
+    
+    try:
+        thanh_vien = ThanhVien.objects.get(cccd=request.user.username)
+        
+        nam_hoc = request.POST.get('nam_hoc')
+        truong = request.POST.get('truong')
+        lop = request.POST.get('lop')
+        thanh_tich = request.POST.get('thanh_tich')
+        minh_chung = request.FILES.get('minh_chung')
+        
+        if not all([nam_hoc, truong, lop, thanh_tich, minh_chung]):
+            messages.error(request, 'Vui lòng điền đầy đủ thông tin!')
+            return redirect('users:thanh_tich_hoc_tap')
+        
+        ThongTinHocTap.objects.create(
+            thanh_vien=thanh_vien,
+            nam_hoc=nam_hoc,
+            truong=truong,
+            lop=lop,
+            thanh_tich=thanh_tich,
+            minh_chung=minh_chung,
+            nguoi_tao=request.user
+        )
+        
+        messages.success(request, 'Đã gửi thành tích học tập! Vui lòng chờ duyệt.')
+    
+    except ThanhVien.DoesNotExist:
+        messages.error(request, 'Không tìm thấy thông tin nhân khẩu của bạn!')
+    except Exception as e:
+        messages.error(request, f'Có lỗi xảy ra: {str(e)}')
+    
+    return redirect('users:thanh_tich_hoc_tap')
+
+# --- CITIZEN: Xem phần thưởng của tôi ---
+@login_required
+def phan_thuong_cua_toi(request):
+    """Trang xem phần thưởng đã nhận"""
+    if not hasattr(request.user, 'profile'):
+        return HttpResponseForbidden()
+    
+    from apps.core.models import LichSuPhatThuong, ThanhVien
+    from django.db.models import Sum, Count
+    
+    try:
+        thanh_vien = ThanhVien.objects.get(cccd=request.user.username)
+    except ThanhVien.DoesNotExist:
+        messages.error(request, 'Không tìm thấy thông tin nhân khẩu của bạn!')
+        return redirect('users:dashboard')
+    
+    # Lấy danh sách phần thưởng
+    phan_thuong_list = LichSuPhatThuong.objects.filter(
+        thanh_vien=thanh_vien
+    ).select_related('phan_thuong', 'nguoi_cap').order_by('-ngay_cap_phat')
+    
+    # Thống kê
+    tong_phan_thuong = phan_thuong_list.count()
+    tong_gia_tri = sum(pt.tong_gia_tri() for pt in phan_thuong_list)
+    so_phan_thuong_hoc_tap = phan_thuong_list.filter(loai_phat_thuong='HocTap').count()
+    so_phan_thuong_dip_le = phan_thuong_list.filter(loai_phat_thuong='DipLe').count()
+    
+    context = {
+        'phan_thuong_list': phan_thuong_list,
+        'tong_phan_thuong': tong_phan_thuong,
+        'tong_gia_tri': tong_gia_tri,
+        'so_phan_thuong_hoc_tap': so_phan_thuong_hoc_tap,
+        'so_phan_thuong_dip_le': so_phan_thuong_dip_le,
+    }
+    
+    return render(request, 'users/phan_thuong_cua_toi.html', context)

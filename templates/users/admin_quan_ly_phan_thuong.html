@@ -1,0 +1,773 @@
+{% extends 'base.html' %}
+
+{% block title %}Quản lý Phần thưởng - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px 20px;
+        border-radius: 15px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .page-header h1 {
+        font-size: 36px;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .tab-navigation {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .tab-btn {
+        flex: 1;
+        padding: 15px 25px;
+        border: 2px solid #e0e0e0;
+        background: white;
+        color: #666;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .tab-btn:hover {
+        border-color: #667eea;
+        color: #667eea;
+        transform: translateY(-2px);
+    }
+
+    .tab-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .tab-content {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .action-card {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        margin-bottom: 25px;
+    }
+
+    .action-card h3 {
+        color: #333;
+        font-size: 22px;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid #667eea;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #38f9d7 0%, #43e97b 100%);
+        color: white;
+        padding: 10px 25px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(56, 249, 215, 0.4);
+    }
+
+    .suggestion-list {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 20px;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .suggestion-item {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border-left: 4px solid #667eea;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .suggestion-item input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    .table-container {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        overflow-x: auto;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .data-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 14px;
+    }
+
+    .data-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .badge-approved {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .badge-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .alert {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border-left: 4px solid #28a745;
+    }
+
+    .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border-left: 4px solid #dc3545;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        text-align: center;
+    }
+
+    .stat-card h4 {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .stat-card .stat-value {
+        color: #667eea;
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .stat-card .stat-label {
+        color: #999;
+        font-size: 12px;
+    }
+
+    .row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>🎁 Quản lý Phần thưởng</h1>
+        <p>Quản lý cấp phát và duyệt thành tích học tập</p>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="tab-navigation">
+        <button class="tab-btn active" onclick="switchTab('phat-thuong')">
+            📋 Danh sách phát thưởng
+        </button>
+        <button class="tab-btn" onclick="switchTab('tao-dot')">
+            🎉 Tạo đợt phát thưởng
+        </button>
+        <button class="tab-btn" onclick="switchTab('hoc-tap')">
+            🏆 Phát thưởng học tập
+        </button>
+        <button class="tab-btn" onclick="switchTab('duyet-thanh-tich')">
+            ✅ Duyệt thành tích ({{ pending_count }})
+        </button>
+        <button class="tab-btn" onclick="switchTab('thong-ke')">
+            📊 Thống kê
+        </button>
+    </div>
+
+    <!-- Tab: Danh sách phát thưởng -->
+    <div id="tab-phat-thuong" class="tab-content active">
+        <div class="table-container">
+            <h3 style="margin-bottom: 20px; color: #333;">📋 Lịch sử phát thưởng</h3>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Thành viên</th>
+                        <th>Phần thưởng</th>
+                        <th>Loại</th>
+                        <th>Số lượng</th>
+                        <th>Tổng giá trị</th>
+                        <th>Đợt phát</th>
+                        <th>Ngày cấp</th>
+                        <th>Người cấp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in lich_su_list %}
+                    <tr>
+                        <td><strong>{{ item.thanh_vien.ho_ten }}</strong></td>
+                        <td>{{ item.phan_thuong.ten_phan_thuong }}</td>
+                        <td>
+                            {% if item.loai_phat_thuong == 'DipLe' %}
+                                <span class="badge" style="background: #ffeaa7; color: #d63031;">🎉 Dịp lễ</span>
+                            {% elif item.loai_phat_thuong == 'HocTap' %}
+                                <span class="badge" style="background: #74b9ff; color: #0984e3;">🏆 Học tập</span>
+                            {% else %}
+                                <span class="badge" style="background: #dfe6e9; color: #2d3436;">📦 Khác</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ item.so_luong }}</strong></td>
+                        <td><strong style="color: #e74c3c;">{{ item.tong_gia_tri|floatformat:0 }} VNĐ</strong></td>
+                        <td>{{ item.dot_phat|default:"-" }}</td>
+                        <td>{{ item.ngay_cap_phat|date:"d/m/Y" }}</td>
+                        <td>{{ item.nguoi_cap.get_full_name }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #999;">
+                            Chưa có dữ liệu phát thưởng
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab: Tạo đợt phát thưởng -->
+    <div id="tab-tao-dot" class="tab-content">
+        <div class="action-card">
+            <h3>🎉 Tạo đợt phát thưởng theo dịp lễ</h3>
+            
+            <form method="POST" action="{% url 'users:tao_dot_phat_thuong' %}">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="form-group">
+                        <label>Loại dịp lễ</label>
+                        <select name="loai_dip" class="form-select" id="loai_dip" onchange="loadSuggestions()">
+                            <option value="">-- Chọn dịp lễ --</option>
+                            <option value="TrungThu">🥮 Trung Thu (Trẻ em 0-18 tuổi)</option>
+                            <option value="HocSinh">🎒 Quốc tế Thiếu nhi (6-18 tuổi)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Phần thưởng</label>
+                        <select name="phan_thuong_id" class="form-select" required>
+                            <option value="">-- Chọn phần thưởng --</option>
+                            {% for dm in danh_muc_list %}
+                            <option value="{{ dm.id }}">{{ dm.ten_phan_thuong }} - {{ dm.gia_tri|floatformat:0 }} VNĐ</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Tên đợt phát</label>
+                    <input type="text" name="dot_phat" class="form-control" placeholder="Ví dụ: Trung Thu 2024" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Số lượng mỗi phần</label>
+                    <input type="number" name="so_luong" class="form-control" value="1" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Ghi chú</label>
+                    <textarea name="ghi_chu" class="form-control" rows="3" placeholder="Ghi chú về đợt phát thưởng"></textarea>
+                </div>
+
+                <div id="suggestion-container"></div>
+
+                <button type="submit" class="btn-primary" style="margin-top: 20px;">
+                    🎁 Tạo đợt phát thưởng
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tab: Phát thưởng học tập -->
+    <div id="tab-hoc-tap" class="tab-content">
+        <div class="action-card">
+            <h3>🏆 Phát thưởng cho thành tích học tập đã duyệt</h3>
+            
+            <form method="POST" action="{% url 'users:phat_thuong_hoc_tap' %}">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="form-group">
+                        <label>Phần thưởng (Vở viết)</label>
+                        <select name="phan_thuong_id" class="form-select" required>
+                            <option value="">-- Chọn phần thưởng --</option>
+                            {% for dm in danh_muc_list %}
+                            <option value="{{ dm.id }}">{{ dm.ten_phan_thuong }} - {{ dm.gia_tri|floatformat:0 }} VNĐ</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tên đợt phát</label>
+                        <input type="text" name="dot_phat" class="form-control" placeholder="Ví dụ: Học tập năm 2024" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Ghi chú</label>
+                    <textarea name="ghi_chu" class="form-control" rows="3" placeholder="Ghi chú về đợt phát thưởng"></textarea>
+                </div>
+
+                <button type="button" class="btn-success" onclick="loadHocTapSuggestions()">
+                    🔍 Tải danh sách thành tích đã duyệt
+                </button>
+
+                <div id="hoc-tap-suggestions"></div>
+
+                <button type="submit" class="btn-primary" style="margin-top: 20px;">
+                    🎁 Phát thưởng học tập
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tab: Duyệt thành tích -->
+    <div id="tab-duyet-thanh-tich" class="tab-content">
+        <div class="table-container">
+            <h3 style="margin-bottom: 20px; color: #333;">✅ Danh sách thành tích chờ duyệt</h3>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Thành viên</th>
+                        <th>Năm học</th>
+                        <th>Trường</th>
+                        <th>Lớp</th>
+                        <th>Thành tích</th>
+                        <th>Minh chứng</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tt in thanh_tich_list %}
+                    <tr>
+                        <td><strong>{{ tt.thanh_vien.ho_ten }}</strong></td>
+                        <td>{{ tt.nam_hoc }}</td>
+                        <td>{{ tt.truong }}</td>
+                        <td>{{ tt.lop }}</td>
+                        <td>
+                            {% if tt.thanh_tich == 'HocSinhGioi' %}
+                                <span class="badge" style="background: #ff6b6b; color: white;">⭐ Học sinh giỏi</span>
+                            {% elif tt.thanh_tich == 'ThanhTichDacBiet' %}
+                                <span class="badge" style="background: #ffd93d; color: #333;">🏆 Thành tích đặc biệt</span>
+                            {% elif tt.thanh_tich == 'HocSinhTienTien' %}
+                                <span class="badge" style="background: #6bcf7f; color: white;">✨ Học sinh tiên tiến</span>
+                            {% else %}
+                                <span class="badge" style="background: #a8dadc; color: #333;">📚 {{ tt.get_thanh_tich_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if tt.minh_chung %}
+                                <a href="{{ tt.minh_chung.url }}" target="_blank" style="color: #667eea; text-decoration: underline;">
+                                    📎 Xem ảnh
+                                </a>
+                            {% else %}
+                                <span style="color: #999;">Không có</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if tt.trang_thai == 'ChoDuyet' %}
+                                <span class="badge badge-pending">⏳ Chờ duyệt</span>
+                            {% elif tt.trang_thai == 'DaDuyet' %}
+                                <span class="badge badge-approved">✅ Đã duyệt</span>
+                            {% else %}
+                                <span class="badge badge-rejected">❌ Từ chối</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if tt.trang_thai == 'ChoDuyet' %}
+                                <form method="POST" action="{% url 'users:duyet_thanh_tich' tt.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="approve">
+                                    <button type="submit" class="btn-success" style="padding: 5px 15px; font-size: 13px;">
+                                        ✅ Duyệt
+                                    </button>
+                                </form>
+                                <button class="btn-primary" style="padding: 5px 15px; font-size: 13px; background: #e74c3c;" 
+                                        onclick="showRejectModal({{ tt.id }})">
+                                    ❌ Từ chối
+                                </button>
+                            {% else %}
+                                <span style="color: #999;">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #999;">
+                            Không có thành tích chờ duyệt
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab: Thống kê -->
+    <div id="tab-thong-ke" class="tab-content">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>Tổng phần thưởng đã phát</h4>
+                <div class="stat-value">{{ tong_phat_thuong }}</div>
+                <div class="stat-label">phần thưởng</div>
+            </div>
+            <div class="stat-card">
+                <h4>Tổng giá trị</h4>
+                <div class="stat-value" style="font-size: 24px;">{{ tong_gia_tri|floatformat:0 }}</div>
+                <div class="stat-label">VNĐ</div>
+            </div>
+            <div class="stat-card">
+                <h4>Thành tích chờ duyệt</h4>
+                <div class="stat-value">{{ pending_count }}</div>
+                <div class="stat-label">hồ sơ</div>
+            </div>
+            <div class="stat-card">
+                <h4>Thành tích đã duyệt</h4>
+                <div class="stat-value">{{ approved_count }}</div>
+                <div class="stat-label">hồ sơ</div>
+            </div>
+        </div>
+
+        <div class="action-card">
+            <h3>📊 Thống kê chi tiết theo đợt phát</h3>
+            <div id="thong-ke-detail"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal từ chối -->
+<div id="rejectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%;">
+        <h3 style="margin-bottom: 20px;">Lý do từ chối</h3>
+        <form id="rejectForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="reject">
+            <div class="form-group">
+                <label>Nhập lý do từ chối:</label>
+                <textarea name="ly_do_tu_choi" class="form-control" rows="4" required></textarea>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn-primary" style="background: #e74c3c;">
+                    ❌ Xác nhận từ chối
+                </button>
+                <button type="button" class="btn-primary" style="background: #95a5a6;" onclick="closeRejectModal()">
+                    Hủy
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function switchTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Remove active class from all buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById('tab-' + tabName).classList.add('active');
+    
+    // Add active class to clicked button
+    event.target.classList.add('active');
+
+    // Load statistics when stats tab is clicked
+    if (tabName === 'thong-ke') {
+        loadStatistics();
+    }
+}
+
+function loadSuggestions() {
+    const loaiDip = document.getElementById('loai_dip').value;
+    if (!loaiDip) {
+        document.getElementById('suggestion-container').innerHTML = '';
+        return;
+    }
+
+    fetch(`/api/lich-su-phat-thuong/goi_y_danh_sach/?loai=${loaiDip}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.danh_sach && data.danh_sach.length > 0) {
+                let html = '<div class="suggestion-list">';
+                html += `<h4 style="margin-bottom: 15px; color: #333;">Gợi ý ${data.danh_sach.length} người phù hợp:</h4>`;
+                
+                data.danh_sach.forEach(item => {
+                    html += `
+                        <div class="suggestion-item">
+                            <div>
+                                <strong>${item.ho_ten}</strong>
+                                <span style="color: #666; margin-left: 10px;">
+                                    ${item.ngay_sinh} (${item.tuoi} tuổi) - ${item.gioi_tinh}
+                                </span>
+                            </div>
+                            <input type="checkbox" name="thanh_vien_ids" value="${item.id}" checked>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                document.getElementById('suggestion-container').innerHTML = html;
+            } else {
+                document.getElementById('suggestion-container').innerHTML = 
+                    '<div class="alert alert-error">Không tìm thấy người phù hợp!</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('suggestion-container').innerHTML = 
+                '<div class="alert alert-error">Có lỗi xảy ra khi tải danh sách!</div>';
+        });
+}
+
+function loadHocTapSuggestions() {
+    fetch('/api/lich-su-phat-thuong/goi_y_danh_sach/?loai=HocTap')
+        .then(response => response.json())
+        .then(data => {
+            if (data.danh_sach && data.danh_sach.length > 0) {
+                let html = '<div class="suggestion-list">';
+                html += `<h4 style="margin-bottom: 15px; color: #333;">Tìm thấy ${data.danh_sach.length} thành tích đã duyệt:</h4>`;
+                
+                data.danh_sach.forEach(item => {
+                    html += `
+                        <div class="suggestion-item">
+                            <div>
+                                <strong>${item.ho_ten}</strong>
+                                <span style="color: #666; margin-left: 10px;">
+                                    ${item.thanh_tich} - ${item.nam_hoc}
+                                </span>
+                                <span style="color: #e74c3c; margin-left: 10px; font-weight: bold;">
+                                    → ${item.so_luong_vo} quyển vở
+                                </span>
+                            </div>
+                            <input type="checkbox" name="thong_tin_hoc_tap_ids" value="${item.thong_tin_hoc_tap_id}" checked>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                document.getElementById('hoc-tap-suggestions').innerHTML = html;
+            } else {
+                document.getElementById('hoc-tap-suggestions').innerHTML = 
+                    '<div class="alert alert-error" style="margin-top: 20px;">Không có thành tích đã duyệt!</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('hoc-tap-suggestions').innerHTML = 
+                '<div class="alert alert-error" style="margin-top: 20px;">Có lỗi xảy ra khi tải danh sách!</div>';
+        });
+}
+
+function loadStatistics() {
+    fetch('/api/lich-su-phat-thuong/thong_ke/')
+        .then(response => response.json())
+        .then(data => {
+            let html = '<div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">';
+            
+            if (data.theo_dot_phat && data.theo_dot_phat.length > 0) {
+                html += '<h4 style="margin-bottom: 15px; color: #333;">📋 Thống kê theo đợt phát:</h4>';
+                data.theo_dot_phat.forEach(item => {
+                    html += `
+                        <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #667eea;">
+                            <strong style="font-size: 16px;">${item.dot_phat || 'Không có tên đợt'}</strong><br>
+                            <span style="color: #666;">
+                                Số lượng: <strong>${item.so_luong}</strong> | 
+                                Tổng giá trị: <strong style="color: #e74c3c;">${item.tong_tien}</strong>
+                            </span>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<p style="color: #999;">Chưa có dữ liệu thống kê</p>';
+            }
+            
+            html += '</div>';
+            document.getElementById('thong-ke-detail').innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('thong-ke-detail').innerHTML = 
+                '<div class="alert alert-error">Có lỗi xảy ra khi tải thống kê!</div>';
+        });
+}
+
+function showRejectModal(thanhTichId) {
+    document.getElementById('rejectModal').style.display = 'flex';
+    document.getElementById('rejectForm').action = `/users/duyet-thanh-tich/${thanhTichId}/`;
+}
+
+function closeRejectModal() {
+    document.getElementById('rejectModal').style.display = 'none';
+}
+
+// Load statistics on page load
+window.addEventListener('load', function() {
+    if (document.getElementById('tab-thong-ke').classList.contains('active')) {
+        loadStatistics();
+    }
+});
+</script>
+{% endblock %}

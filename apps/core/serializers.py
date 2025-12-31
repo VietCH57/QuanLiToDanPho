@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
     HoGiaDinh, ThanhVien, DanhMucPhanThuong, 
-    LichSuPhatThuong, TamTru, TamVang
+    LichSuPhatThuong, TamTru, TamVang, ThongTinHocTap
 )
 from apps.users.models import UserProfile
 
@@ -67,6 +67,25 @@ class HoGiaDinhSerializer(serializers.ModelSerializer):
 #  NHÓM 2: QUẢN LÝ KHEN THƯỞNG
 # ==========================================================
 
+class ThongTinHocTapSerializer(serializers.ModelSerializer):
+    """Serializer cho thông tin học tập"""
+    ten_thanh_vien = serializers.CharField(source='thanh_vien.ho_ten', read_only=True)
+    ten_thanh_tich = serializers.CharField(source='get_thanh_tich_display', read_only=True)
+    ten_trang_thai = serializers.CharField(source='get_trang_thai_display', read_only=True)
+    
+    class Meta:
+        model = ThongTinHocTap
+        fields = [
+            'id', 'thanh_vien', 'ten_thanh_vien', 
+            'nam_hoc', 'truong', 'lop', 
+            'thanh_tich', 'ten_thanh_tich',
+            'minh_chung', 'trang_thai', 'ten_trang_thai',
+            'nguoi_duyet', 'ngay_duyet', 'ly_do_tu_choi',
+            'ngay_tao', 'nguoi_tao'
+        ]
+        read_only_fields = ['id', 'trang_thai', 'nguoi_duyet', 'ngay_duyet', 'ngay_tao', 'nguoi_tao']
+
+
 class DanhMucPhanThuongSerializer(serializers.ModelSerializer):
     class Meta:
         model = DanhMucPhanThuong
@@ -83,16 +102,23 @@ class LichSuPhatThuongSerializer(serializers.ModelSerializer):
     ten_thanh_vien = serializers.CharField(source='thanh_vien.ho_ten', read_only=True)
     ten_phan_thuong = serializers.CharField(source='phan_thuong.ten_phan_thuong', read_only=True)
     gia_tri_phan_thuong = serializers.DecimalField(source='phan_thuong.gia_tri', max_digits=10, decimal_places=0, read_only=True)
+    tong_gia_tri = serializers.SerializerMethodField()
+    ten_loai_phat_thuong = serializers.CharField(source='get_loai_phat_thuong_display', read_only=True)
 
     class Meta:
         model = LichSuPhatThuong
         fields = [
             'id', 'thanh_vien', 'ten_thanh_vien', 
             'phan_thuong', 'ten_phan_thuong', 'gia_tri_phan_thuong',
+            'loai_phat_thuong', 'ten_loai_phat_thuong',
+            'thong_tin_hoc_tap', 'so_luong', 'tong_gia_tri',
             'dot_phat', 'minh_chung', 'trang_thai',
             'ngay_cap_phat', 'nguoi_cap', 'ghi_chu'
         ]
-        read_only_fields = ['id', 'ngay_cap_phat', 'nguoi_cap']
+        read_only_fields = ['id', 'ngay_cap_phat', 'nguoi_cap', 'tong_gia_tri']
+    
+    def get_tong_gia_tri(self, obj):
+        return obj.tong_gia_tri()
 
 
 # ==========================================================

@@ -30,4 +30,13 @@ urlpatterns = [
     # Admin tách hộ
     path('admin/ho-khau/tach/<int:ho_id>/', views.admin_tach_ho, name='admin_tach_ho'),
     path('admin/ho-khau/them/', views.admin_them_ho_khau, name='admin_them_ho_khau'),
+    # Admin quản lý phần thưởng
+    path('admin/phan-thuong/', views.admin_quan_ly_phan_thuong, name='admin_quan_ly_phan_thuong'),
+    path('admin/phan-thuong/tao-dot/', views.tao_dot_phat_thuong, name='tao_dot_phat_thuong'),
+    path('admin/phan-thuong/phat-thuong-hoc-tap/', views.phat_thuong_hoc_tap, name='phat_thuong_hoc_tap'),
+    path('admin/phan-thuong/duyet-thanh-tich/<int:thanh_tich_id>/', views.duyet_thanh_tich, name='duyet_thanh_tich'),
+    # Citizen - Thành tích học tập và phần thưởng
+    path('thanh-tich-hoc-tap/', views.thanh_tich_hoc_tap_view, name='thanh_tich_hoc_tap'),
+    path('thanh-tich-hoc-tap/gui/', views.gui_thanh_tich, name='gui_thanh_tich'),
+    path('phan-thuong-cua-toi/', views.phan_thuong_cua_toi, name='phan_thuong_cua_toi'),
 ]
