@@ -17,7 +17,7 @@ BTL môn Nhập môn Công nghệ phần mềm
 ```bash
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+pip install -r requirements.txt (muốn chạy nhanh nhẹ thì thêm # trước mysqlclient==2.2.7 và thêm pymysql vào cuối file requirements.txt)
 python manage.py migrate
 Get-Content create_demo_users.py | python manage.py shell
 python manage.py runserver
