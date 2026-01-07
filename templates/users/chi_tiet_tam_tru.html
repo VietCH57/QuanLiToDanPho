@@ -326,13 +326,19 @@
         <!-- Thông tin phê duyệt (nếu đã phê duyệt) -->
         {% if tam_tru.trang_thai != 'ChoDuyet' %}
         <div class="approval-info">
-            <p><strong>Người phê duyệt:</strong> {{ tam_tru.nguoi_duyet.profile.full_name|default:tam_tru.nguoi_duyet.username }}</p>
-            <p><strong>Ngày phê duyệt:</strong> {{ tam_tru.ngay_duyet|date:"d/m/Y H:i" }}</p>
-            {% if tam_tru.ghi_chu_can_bo %}
-            <p><strong>Ghi chú:</strong> {{ tam_tru.ghi_chu_can_bo }}</p>
-            {% endif %}
-        </div>
-        {% endif %}
+            <p><strong>Người phê duyệt:</strong> 
+                  {% if tam_tru.nguoi_duyet %}
+                            {{ tam_tru.nguoi_duyet.profile.full_name|default:tam_tru.nguoi_duyet.username }}
+                        {% else %}
+                            <span style="color: #999; font-style: italic;">(Thông tin người duyệt không khả dụng)</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Ngày phê duyệt:</strong> {{ tam_tru.ngay_duyet|date:"d/m/Y H:i" }}</p>
+                    {% if tam_tru.ghi_chu_can_bo %}
+                    <p><strong>Ghi chú:</strong> {{ tam_tru.ghi_chu_can_bo }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
 
         <!-- Phần phê duyệt (chỉ cho cán bộ và đơn chưa xử lý) -->
         {% if is_manager and tam_tru.trang_thai == 'ChoDuyet' %}

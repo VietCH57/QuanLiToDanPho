@@ -2,10 +2,12 @@
 Django settings for QuanLiToDanPho project.
 """
 from pathlib import Path
+import os
 
-# Uncomment 2 dòng dưới nếu dùng pymysql thay vì mysqlclient
-# import pymysql
-# pymysql.install_as_MySQLdb()
+# --- CẤU HÌNH FIX LỖI MYSQLCLIENT TRÊN WINDOWS (QUAN TRỌNG) ---
+import pymysql
+pymysql.install_as_MySQLdb()
+# -------------------------------------------------------------
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -45,23 +47,13 @@ INSTALLED_APPS = [
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# --- CHỌN 1 TRONG 2 CẤU HÌNH BÊN DƯỚI ---
-
-# CẤU HÌNH 1: SQLite (Mặc định - Đơn giản, không cần cài gì)
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-# CẤU HÌNH 2: MySQL (Production - Nhanh hơn, đa người dùng)
+# CẤU HÌNH: MySQL (Dùng pymysql thay cho mysqlclient)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'QLToDanPho',
-        'USER': 'root',
-        'PASSWORD': '123456',
+        'NAME': 'QLToDanPho',  # Tên Database trong MySQL của bạn
+        'USER': 'root',        # Tên đăng nhập MySQL (thường là root)
+        'PASSWORD': '123456',  # Mật khẩu MySQL của bạn (Sửa lại nếu khác)
         'HOST': '127.0.0.1',
         'PORT': '3306',
         'OPTIONS': {
@@ -71,13 +63,8 @@ DATABASES = {
     }
 }
 
-# Nếu dùng pymysql thay vì mysqlclient, uncomment 2 dòng dưới:
-# import pymysql
-# pymysql.install_as_MySQLdb()
-
 
 # Password validation
-# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -95,7 +82,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.0/topics/i18n/
 LANGUAGE_CODE = 'vi'
 TIME_ZONE = 'Asia/Ho_Chi_Minh'
 USE_I18N = True
@@ -103,13 +89,11 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.0/howto/static-files/
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
@@ -158,16 +142,11 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # Cấu hình cho Django REST Framework
 REST_FRAMEWORK = {
-    # 1. Cấu hình Filter (Bộ lọc) mặc định
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
     ],
-    
-    # 2. Cấu hình Phân trang (Pagination)
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,  # Mỗi trang hiển thị 10 kết quả (Frontend tự chia trang 1, 2, 3...)
-
-    # 3. Cấu hình Format ngày tháng (Để Frontend dễ đọc)
-    'DATE_FORMAT': '%d-%m-%Y',        # Ngày sinh hiển thị dạng: 28-12-2025
+    'PAGE_SIZE': 10,
+    'DATE_FORMAT': '%d-%m-%Y',
     'DATETIME_FORMAT': '%d-%m-%Y %H:%M:%S',
 }

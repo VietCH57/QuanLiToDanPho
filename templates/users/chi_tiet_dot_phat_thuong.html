@@ -331,7 +331,11 @@
             </div>
             <div class="info-item">
                 <strong>Người tạo:</strong>
-                {{ dot.nguoi_tao.get_full_name|default:dot.nguoi_tao.username }}
+                {% if dot.nguoi_tao %}
+                    {{ dot.nguoi_tao.get_full_name|default:dot.nguoi_tao.username }}
+                {% else %}
+                    <span style="color: #999;">(Không xác định)</span>
+                {% endif %}
             </div>
         </div>
         {% if dot.mo_ta %}
